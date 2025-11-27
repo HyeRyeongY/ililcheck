@@ -1,0 +1,87 @@
+.container {
+  background-color: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.percentage {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.progressBarContainer {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.progressBlock {
+  height: 0.5rem;
+  flex: 1;
+  border-radius: 0.125rem;
+}
+
+.progressBlock.completed {
+  background-color: #3b82f6;
+}
+
+.progressBlock.inProgress {
+  background-color: #60a5fa;
+}
+
+.progressBlock.empty {
+  background-color: #e5e7eb;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.statItem {
+  text-align: center;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.statValue.total {
+  color: #111827;
+}
+
+.statValue.inProgress {
+  color: #2563eb;
+}
+
+.statValue.completed {
+  color: #16a34a;
+}
+
+.statValue.onHold {
+  color: #dc2626;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: #4b5563;
+}

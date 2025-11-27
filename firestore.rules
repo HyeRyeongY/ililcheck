@@ -1,0 +1,52 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 사용자 인증 확인 함수
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // 사용자 본인 확인 함수
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // 프로젝트 규칙
+    match /projects/{projectId} {
+      // 읽기: 본인의 프로젝트만 조회 가능
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+
+      // 생성: 로그인 사용자만 가능하고, userId가 본인 것이어야 함
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+
+      // 업데이트: 본인의 프로젝트만 수정 가능
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+
+      // 삭제: 본인의 프로젝트만 삭제 가능
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // 작업 그룹 규칙
+    match /taskGroups/{groupId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // 작업 규칙
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // 기본 규칙: 모든 다른 문서는 접근 거부
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

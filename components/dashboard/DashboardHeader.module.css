@@ -1,0 +1,29 @@
+.header {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1.5rem 2rem;
+}
+
+.dateContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-bottom: 0.25rem;
+}
+
+.calendarIcon {
+  width: 1rem;
+  height: 1rem;
+  color: #3b82f6;
+}
+
+.dateText {
+  font-weight: 500;
+}
+
+.workWeek {
+  font-size: 0.875rem;
+  color: #6b7280;
+}

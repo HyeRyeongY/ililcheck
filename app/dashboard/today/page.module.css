@@ -1,0 +1,23 @@
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9fafb;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.contentWrapper {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.projectsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

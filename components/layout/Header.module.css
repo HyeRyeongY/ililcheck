@@ -1,0 +1,84 @@
+.container {
+  border-bottom: 1px solid #e5e7eb;
+  background-color: white;
+  padding: 1rem 1.5rem;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.dateRange {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dateRangeLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.dateInput {
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.dateInput:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.dateSeparator {
+  color: #9ca3af;
+}
+
+.exportButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.exportButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.exportButtonJpg {
+  background-color: #22c55e;
+}
+
+.exportButtonJpg:hover {
+  background-color: #16a34a;
+}
+
+.exportButtonPdf {
+  background-color: #3b82f6;
+}
+
+.exportButtonPdf:hover {
+  background-color: #2563eb;
+}

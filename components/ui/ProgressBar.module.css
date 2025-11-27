@@ -1,0 +1,42 @@
+.container {
+  width: 100%;
+}
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.barContainer {
+  flex: 1;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.barSm {
+  height: 0.25rem;
+}
+
+.barMd {
+  height: 0.5rem;
+}
+
+.barLg {
+  height: 0.75rem;
+}
+
+.bar {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  min-width: 3rem;
+  text-align: right;
+}

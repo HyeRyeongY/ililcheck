@@ -1,0 +1,366 @@
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9fafb;
+}
+
+.header {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 1.5rem;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.content {
+  flex: 1;
+  padding: 1.5rem;
+  overflow: hidden;
+}
+
+.mainGrid {
+  max-width: 80rem;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.calendarContainer {
+  flex: 1;
+  background-color: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.calendarControls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.todayButton {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  background-color: #3b82f6;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+}
+
+.todayButton:hover {
+  background-color: #2563eb;
+}
+
+.navButton {
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+}
+
+.navButton:hover {
+  background-color: #f3f4f6;
+}
+
+.monthTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.weekdaysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  color: #374151;
+}
+
+.weekdaySunday {
+  color: #ef4444;
+}
+
+.weekdaySaturday {
+  color: #3b82f6;
+}
+
+.daysGrid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  background-color: #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.dayCell {
+  background-color: white;
+  padding: 0.5rem;
+  text-align: left;
+  transition: background-color 0.2s;
+  position: relative;
+  min-height: 100px;
+}
+
+.dayCell:hover {
+  background-color: #f9fafb;
+}
+
+.dayCellOtherMonth {
+  color: #9ca3af;
+}
+
+.dayCellSelected {
+  box-shadow: inset 0 0 0 2px #3b82f6;
+}
+
+.dayNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.dayNumberToday {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.dayNumberSunday {
+  color: #ef4444;
+}
+
+.dayNumberSaturday {
+  color: #3b82f6;
+}
+
+.dayNumberOtherMonth {
+  color: #9ca3af;
+}
+
+.taskDots {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.taskDot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+}
+
+.taskDotCompleted {
+  background-color: #22c55e;
+}
+
+.taskDotInProgress {
+  background-color: #3b82f6;
+}
+
+.sidebar {
+  width: 24rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  padding: 1.5rem;
+}
+
+.sidebarHeader {
+  margin-bottom: 1.5rem;
+}
+
+.sidebarTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.sidebarSubtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.progressCard {
+  background-color: #eff6ff;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.progressLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.progressValue {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.progressBarContainer {
+  height: 0.5rem;
+  background-color: #bfdbfe;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background-color: #3b82f6;
+  border-radius: 9999px;
+}
+
+.progressStats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.progressStat {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.progressStatDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+}
+
+.progressStatDotBlue {
+  background-color: #3b82f6;
+}
+
+.progressStatDotGreen {
+  background-color: #22c55e;
+}
+
+.progressStatDotOrange {
+  background-color: #f97316;
+}
+
+.progressStatText {
+  color: #4b5563;
+}
+
+.projectsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.projectsSectionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.projectsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.projectItem {
+  border-left: 4px solid #3b82f6;
+  padding-left: 0.75rem;
+}
+
+.projectItemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.projectItemTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.projectItemAddButton {
+  color: #3b82f6;
+  font-size: 0.75rem;
+}
+
+.projectItemAddButton:hover {
+  color: #2563eb;
+}
+
+.projectTasks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.projectTask {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.projectTaskCheckbox {
+  margin-top: 0.125rem;
+}
+
+.projectTaskTitle {
+  flex: 1;
+  color: #374151;
+}
+
+.projectTaskCount {
+  font-size: 0.75rem;
+  color: #6b7280;
+}

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(del libnotion.ts)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
