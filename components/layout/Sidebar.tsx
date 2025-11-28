@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Calendar, FileText, Plus, LogOut } from 'lucide-react';
+import { Home, Calendar, FileText, Plus, LogOut, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { signOut } from '@/lib/auth';
+import { logout } from '@/lib/auth';
 import { fetchProjects } from '@/lib/api';
 import type { Project } from '@/lib/types';
+import CreateProjectModal from '@/components/modals/CreateProjectModal';
 import styles from './Sidebar.module.css';
 
 const navigation = [
@@ -18,12 +19,20 @@ const navigation = [
   { name: '보고서', href: '/dashboard/reports', icon: FileText },
 ];
 
+// Master 계정인지 확인하는 함수
+const isMasterAccount = (email: string | null): boolean => {
+  if (!email) return false;
+  const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL;
+  return masterEmail ? email === masterEmail : false;
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
   const currentTab = pathname.includes('업무') ? '업무' : '개인';
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadProjects() {
@@ -48,7 +57,17 @@ export default function Sidebar() {
   }, [user]);
 
   const handleLogout = async () => {
-    await signOut();
+    await logout();
+  };
+
+  const handleProjectCreated = async () => {
+    // 프로젝트 목록 새로고침
+    try {
+      const userProjects = await fetchProjects();
+      setProjects(userProjects);
+    } catch (error) {
+      console.error('프로젝트 로드 실패:', error);
+    }
   };
 
   return (
@@ -99,6 +118,23 @@ export default function Sidebar() {
             </Link>
           );
         })}
+
+        {/* Master 계정 전용: 관리자 페이지 링크 */}
+        {isMasterAccount(user?.email || null) && (
+          <Link
+            href="/admin"
+            className={`${styles.navLink} ${styles.adminLink} ${
+              pathname === '/admin' ? styles.navLinkActive : styles.navLinkInactive
+            }`}
+          >
+            <Shield
+              className={`${styles.navIcon} ${
+                pathname === '/admin' ? styles.navIconActive : styles.navIconInactive
+              }`}
+            />
+            관리자
+          </Link>
+        )}
       </nav>
 
       {/* 프로젝트 목록 */}
@@ -107,7 +143,10 @@ export default function Sidebar() {
           <h2 className={styles.projectsTitle}>
             프로젝트
           </h2>
-          <button className={styles.addButton}>
+          <button
+            className={styles.addButton}
+            onClick={() => setIsModalOpen(true)}
+          >
             <Plus className="h-4 w-4 text-gray-400" />
           </button>
         </div>
@@ -167,6 +206,13 @@ export default function Sidebar() {
           로그아웃
         </button>
       </div>
+
+      {/* 프로젝트 생성 모달 */}
+      <CreateProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleProjectCreated}
+      />
     </div>
   );
 }

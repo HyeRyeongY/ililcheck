@@ -9,6 +9,7 @@ import {
   signInWithPopup,
 } from 'firebase/auth';
 import app from './firebase';
+import { saveUserInfo } from './admin';
 
 export const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
@@ -19,7 +20,12 @@ const googleProvider = new GoogleAuthProvider();
 export async function signUpWithEmail(email: string, password: string) {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    return { user: userCredential.user, error: null };
+    const user = userCredential.user;
+
+    // 사용자 정보 저장
+    await saveUserInfo(user.uid, user.email, user.displayName, 'password');
+
+    return { user, error: null };
   } catch (error: any) {
     return { user: null, error: error.message };
   }
@@ -31,7 +37,12 @@ export async function signUpWithEmail(email: string, password: string) {
 export async function signInWithEmail(email: string, password: string) {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return { user: userCredential.user, error: null };
+    const user = userCredential.user;
+
+    // 사용자 정보 업데이트 (마지막 로그인 시간)
+    await saveUserInfo(user.uid, user.email, user.displayName, 'password');
+
+    return { user, error: null };
   } catch (error: any) {
     return { user: null, error: error.message };
   }
@@ -43,7 +54,12 @@ export async function signInWithEmail(email: string, password: string) {
 export async function signInWithGoogle() {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    return { user: result.user, error: null };
+    const user = result.user;
+
+    // 사용자 정보 저장/업데이트
+    await saveUserInfo(user.uid, user.email, user.displayName, 'google.com');
+
+    return { user, error: null };
   } catch (error: any) {
     return { user: null, error: error.message };
   }

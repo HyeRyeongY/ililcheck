@@ -44,6 +44,34 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
+    // 사용자 정보 컬렉션 규칙
+    match /users/{userId} {
+      // 모든 인증된 사용자가 읽을 수 있음 (관리자 페이지 사용자 목록 조회용)
+      allow read: if isAuthenticated();
+
+      // 본인의 정보만 생성/수정 가능
+      allow create, update: if isAuthenticated() && request.auth.uid == userId;
+
+      // 삭제는 금지
+      allow delete: if false;
+    }
+
+    // 관리자 권한 컬렉션 규칙
+    match /admins/{userId} {
+      // 모든 인증된 사용자가 읽을 수 있음 (역할 확인용)
+      allow read: if isAuthenticated();
+
+      // Master 또는 Manager만 권한을 부여/제거할 수 있음
+      allow write: if isAuthenticated() && isAdmin();
+    }
+
+    // 관리자 권한 확인 함수 (Master 또는 Manager)
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+        (get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'manager' ||
+         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true);
+    }
+
     // 기본 규칙: 모든 다른 문서는 접근 거부
     match /{document=**} {
       allow read, write: if false;

@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(del libnotion.ts)"
+      "Bash(del libnotion.ts)",
+      "Bash(firebase deploy:*)"
     ],
     "deny": [],
     "ask": []

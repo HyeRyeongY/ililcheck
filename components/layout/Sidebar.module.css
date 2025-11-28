@@ -102,6 +102,27 @@
   color: #6b7280;
 }
 
+/* 관리자 링크 스타일 */
+.adminLink {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.adminLink.navLinkActive {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+
+.adminLink.navLinkActive .navIcon {
+  color: #16a34a;
+}
+
+.adminLink.navLinkInactive:hover {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+
 .projects {
   flex: 1;
   padding: 0 0.75rem;
