@@ -8,6 +8,8 @@ export interface Project {
   progress: number;
   daysRemaining: number;
   category: 'personal' | 'work'; // 개인/업무 구분
+  completedTasks?: number;
+  totalTasks?: number;
 }
 
 export interface TaskGroup {
@@ -20,13 +22,24 @@ export interface TaskGroup {
 
 export interface Task {
   id: string;
-  taskGroupId: string;
   projectId: string;
   title: string;
   status: 'todo' | 'in_progress' | 'completed' | 'on_hold';
   progress: number;
   dueDate?: string;
   createdAt: string;
+  todos: Todo[];
+}
+
+export interface Todo {
+  id: string;
+  taskId: string;
+  title: string;
+  status: 'todo' | 'in_progress' | 'completed' | 'on_hold' | 'postponed';
+  progress: number;
+  dueDate?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DailyReport {

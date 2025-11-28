@@ -1,18 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import ProgressVisualization from '@/components/dashboard/ProgressVisualization';
-import FilterButtons from '@/components/dashboard/FilterButtons';
-import ProjectDetailCard from '@/components/dashboard/ProjectDetailCard';
-import { Task, TaskFilterType, TaskStats, Project, TaskGroup } from '@/lib/types';
-import { updateTaskProgress, updateTask, deleteTask as deleteTaskAPI, fetchProjects, fetchTaskGroups } from '@/lib/api';
-import { useAuth } from '@/contexts/AuthContext';
-import styles from './page.module.css';
+import { useState, useEffect } from "react";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import ProgressVisualization from "@/components/dashboard/ProgressVisualization";
+import FilterButtons from "@/components/dashboard/FilterButtons";
+import ProjectDetailCard from "@/components/dashboard/ProjectDetailCard";
+import { Task, TaskFilterType, TaskStats, Project, TaskGroup } from "@/lib/types";
+import {
+  updateTaskProgress,
+  updateTask,
+  deleteTask as deleteTaskAPI,
+  fetchProjects,
+  fetchTaskGroups,
+} from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+import styles from "./page.module.css";
 
 export default function TodayPage() {
   const { user } = useAuth();
-  const [activeFilter, setActiveFilter] = useState<TaskFilterType>('all');
+  const [activeFilter, setActiveFilter] = useState<TaskFilterType>("all");
   const [tasks, setTasks] = useState<TaskGroup[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -36,7 +42,7 @@ export default function TodayPage() {
         setProjects(userProjects);
         setTasks(userTaskGroups);
       } catch (error) {
-        console.error('데이터 로드 실패:', error);
+        console.error("데이터 로드 실패:", error);
       } finally {
         setLoading(false);
       }
@@ -51,35 +57,39 @@ export default function TodayPage() {
   // 통계 계산
   const stats: TaskStats = {
     total: allTasks.length,
-    inProgress: allTasks.filter((t) => t.status === 'in_progress').length,
-    completed: allTasks.filter((t) => t.status === 'completed').length,
-    onHold: allTasks.filter((t) => t.status === 'on_hold').length,
+    inProgress: allTasks.filter((t) => t.status === "in_progress").length,
+    completed: allTasks.filter((t) => t.status === "completed").length,
+    onHold: allTasks.filter((t) => t.status === "on_hold").length,
   };
 
   // 필터링된 작업 그룹
-  const filteredTaskGroups = tasks.map((group) => ({
-    ...group,
-    tasks:
-      activeFilter === 'all'
-        ? group.tasks
-        : group.tasks.filter((task) => task.status === activeFilter),
-  })).filter((group) => group.tasks.length > 0);
+  const filteredTaskGroups = tasks
+    .map((group) => ({
+      ...group,
+      tasks:
+        activeFilter === "all"
+          ? group.tasks
+          : group.tasks.filter((task) => task.status === activeFilter),
+    }))
+    .filter((group) => group.tasks.length > 0);
 
   // 작업 상태 변경
-  const handleTaskStatusChange = async (taskId: string, status: Task['status']) => {
+  const handleTaskStatusChange = async (taskId: string, status: Task["status"]) => {
     // UI 즉시 업데이트
     setTasks((prevGroups) =>
       prevGroups.map((group) => ({
         ...group,
         tasks: group.tasks.map((task) =>
-          task.id === taskId ? { ...task, status, progress: status === 'completed' ? 100 : task.progress } : task
+          task.id === taskId
+            ? { ...task, status, progress: status === "completed" ? 100 : task.progress }
+            : task
         ),
       }))
     );
 
     // Firebase에 동기화
     setIsSyncing(true);
-    await updateTask(taskId, { status, progress: status === 'completed' ? 100 : undefined });
+    await updateTask(taskId, { status, progress: status === "completed" ? 100 : undefined });
     setIsSyncing(false);
   };
 
@@ -90,7 +100,9 @@ export default function TodayPage() {
       prevGroups.map((group) => ({
         ...group,
         tasks: group.tasks.map((task) =>
-          task.id === taskId ? { ...task, progress, status: progress >= 100 ? 'completed' : task.status } : task
+          task.id === taskId
+            ? { ...task, progress, status: progress >= 100 ? "completed" : task.status }
+            : task
         ),
       }))
     );
@@ -123,7 +135,7 @@ export default function TodayPage() {
       const userTaskGroups = await fetchTaskGroups();
       setTasks(userTaskGroups);
     } catch (error) {
-      console.error('작업 그룹 새로고침 실패:', error);
+      console.error("작업 그룹 새로고침 실패:", error);
     }
   };
 
@@ -136,7 +148,9 @@ export default function TodayPage() {
   }
 
   const today = new Date();
-  const dateString = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][today.getDay()]}요일`;
+  const dateString = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${
+    ["일", "월", "화", "수", "목", "금", "토"][today.getDay()]
+  }요일`;
 
   return (
     <div className={styles.container}>
@@ -151,6 +165,7 @@ export default function TodayPage() {
       <div className={styles.mainContent}>
         <div className={styles.contentWrapper}>
           {/* 진행 상황 시각화 */}
+
           <ProgressVisualization stats={stats} />
 
           {/* 필터 버튼 */}

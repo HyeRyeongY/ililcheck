@@ -34,29 +34,33 @@
 }
 
 .tabPersonal {
-  background-color: #f3f4f6;
-  color: #111827;
+  background-color: #3b82f6;
+  color: white;
+  font-weight: 600;
 }
 
 .tabWork {
   background-color: #3b82f6;
   color: white;
+  font-weight: 600;
 }
 
 .tabInactive {
   color: #4b5563;
+  background-color: #f3f4f6;
 }
 
 .tabInactive:hover {
-  background-color: #f9fafb;
+  background-color: #e5e7eb;
+  color: #374151;
 }
 
 .navigation {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   padding: 0 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .navLink {
@@ -105,20 +109,20 @@
 /* 관리자 링크 스타일 */
 .adminLink {
   margin-top: 0.5rem;
-  padding-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
   border-top: 1px solid #e5e7eb;
 }
 
-.adminLink.navLinkActive {
+.adminLink .navLinkActive {
   background-color: #f0fdf4;
   color: #16a34a;
 }
 
-.adminLink.navLinkActive .navIcon {
+.adminLink .navLinkActive .navIcon {
   color: #16a34a;
 }
 
-.adminLink.navLinkInactive:hover {
+.adminLink .navLinkInactive:hover {
   background-color: #f0fdf4;
   color: #16a34a;
 }
@@ -132,7 +136,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem;
+  border-top: 1px solid #e5e7eb;
 }
 
 .projectsTitle {
@@ -155,17 +160,27 @@
 .projectsList {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin-top: 0.5rem;
+  gap: 0.5rem;
 }
 
 .projectLink {
   display: block;
 }
 
+.projectLinkActive .projectItem {
+  background-color: #eff6ff;
+  border: 1px solid #3b82f6;
+}
+
+.projectLinkActive .projectName {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
 .projectItem {
   border-radius: 0.5rem;
   padding: 0.5rem 0.75rem;
+  border: 1px solid #f9fafb;
 }
 
 .projectItem:hover {
@@ -180,22 +195,17 @@
 
 .projectLeft {
   display: flex;
-  align-items: center;
   gap: 0.5rem;
   flex: 1;
   min-width: 0;
 }
 
 .projectColor {
-  height: 0.75rem;
-  width: 0.75rem;
+  height: 1rem;
+  width: 0.25rem;
+  margin-top: 0.125rem;
   border-radius: 0.125rem;
   flex-shrink: 0;
-}
-
-.projectInfo {
-  flex: 1;
-  min-width: 0;
 }
 
 .projectName {
@@ -212,6 +222,18 @@
   color: #6b7280;
 }
 
+.projectProgressContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.taskCount {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
 .projectProgress {
   font-size: 0.75rem;
   font-weight: 500;
@@ -219,7 +241,7 @@
 }
 
 .progressBarContainer {
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   height: 0.25rem;
   width: 100%;
   background-color: #f3f4f6;
@@ -232,11 +254,15 @@
   border-radius: 9999px;
   transition: width 0.3s;
 }
-
+.projectPeriod {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.25rem;
+}
 .projectDates {
   font-size: 0.75rem;
   color: #9ca3af;
-  margin-top: 0.25rem;
 }
 
 .logoutSection {

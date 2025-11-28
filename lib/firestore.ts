@@ -230,6 +230,7 @@ export async function fetchProjects(userId: string): Promise<Project[]> {
 
     const projects: Project[] = snapshot.docs.map((doc) => {
       const data = doc.data();
+      console.log('Firestore에서 읽어온 프로젝트 데이터:', { id: doc.id, ...data });
       return {
         id: doc.id,
         name: data.name,
@@ -239,6 +240,7 @@ export async function fetchProjects(userId: string): Promise<Project[]> {
         endDate: data.endDate,
         progress: data.progress,
         daysRemaining: data.daysRemaining,
+        category: data.category || 'personal', // category 필드 추가!
       };
     });
 
@@ -249,13 +251,42 @@ export async function fetchProjects(userId: string): Promise<Project[]> {
   }
 }
 
+export async function fetchProject(projectId: string): Promise<Project | null> {
+  try {
+    const projectRef = doc(db, PROJECTS_COLLECTION, projectId);
+    const docSnap = await getDoc(projectRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        name: data.name,
+        color: data.color,
+        description: data.description,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        progress: data.progress,
+        daysRemaining: data.daysRemaining,
+        category: data.category || 'personal',
+      };
+    } else {
+      console.log("해당 프로젝트가 없습니다.");
+      return null;
+    }
+  } catch (error) {
+    console.error("프로젝트 조회 실패:", error);
+    return null;
+  }
+}
+
+
 /**
  * 새 프로젝트 생성
  */
 export async function createProject(
   userId: string,
   project: Omit<Project, 'id'>
-): Promise<string | null> {
+): Promise<Project | null> {
   try {
     const projectsRef = collection(db, PROJECTS_COLLECTION);
     const docRef = await addDoc(projectsRef, {
@@ -265,7 +296,10 @@ export async function createProject(
       updatedAt: serverTimestamp(),
     });
 
-    return docRef.id;
+    // 생성된 프로젝트 정보 다시 조회하여 반환
+    const newProject = await fetchProject(docRef.id);
+    return newProject;
+    
   } catch (error) {
     console.error('프로젝트 생성 실패:', error);
     return null;
@@ -280,12 +314,19 @@ export async function updateProject(
   updates: Partial<Project>
 ): Promise<boolean> {
   try {
+    console.log('Firestore 업데이트 시작:', { projectId, updates });
+    
     const projectRef = doc(db, PROJECTS_COLLECTION, projectId);
-    await updateDoc(projectRef, {
+    const updateData = {
       ...updates,
       updatedAt: serverTimestamp(),
-    });
+    };
+    
+    console.log('업데이트할 데이터:', updateData);
+    
+    await updateDoc(projectRef, updateData);
 
+    console.log('Firestore 업데이트 성공');
     return true;
   } catch (error) {
     console.error('프로젝트 업데이트 실패:', error);

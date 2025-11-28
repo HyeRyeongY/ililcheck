@@ -1,0 +1,195 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.dialog {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 28rem;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideIn 0.2s ease-out;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.closeButton {
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.closeButton:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.content {
+  padding: 1.5rem;
+}
+
+.message {
+  font-size: 1rem;
+  color: #374151;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background-color: white;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.cancelButton:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.confirmButton {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background-color: #3b82f6;
+  color: white;
+  border: 1px solid #3b82f6;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.confirmButton:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.confirmButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.keyboardHint {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* 타입별 스타일 */
+.success .confirmButton {
+  background-color: #22c55e;
+  border-color: #22c55e;
+}
+
+.success .confirmButton:hover {
+  background-color: #16a34a;
+  border-color: #16a34a;
+}
+
+.warning .confirmButton {
+  background-color: #f59e0b;
+  border-color: #f59e0b;
+}
+
+.warning .confirmButton:hover {
+  background-color: #d97706;
+  border-color: #d97706;
+}
+
+.error .confirmButton {
+  background-color: #ef4444;
+  border-color: #ef4444;
+}
+
+.error .confirmButton:hover {
+  background-color: #dc2626;
+  border-color: #dc2626;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  .dialog {
+    margin: 1rem;
+    width: calc(100% - 2rem);
+  }
+  
+  .header {
+    padding: 1rem 1rem 0 1rem;
+  }
+  
+  .content {
+    padding: 1rem;
+  }
+  
+  .actions {
+    padding: 0 1rem 1rem 1rem;
+    flex-direction: column;
+  }
+  
+  .keyboardHint {
+    padding: 0.5rem 1rem;
+    font-size: 0.625rem;
+  }
+}

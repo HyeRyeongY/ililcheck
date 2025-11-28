@@ -1,4 +1,4 @@
-import { Task, Project, TaskGroup } from './types';
+import { Task, Project, TaskGroup, Todo } from './types';
 import {
   fetchTasks as fetchTasksFromFirestore,
   fetchTasksByProject as fetchTasksByProjectFromFirestore,
@@ -81,7 +81,7 @@ export async function fetchProjects(): Promise<Project[]> {
 /**
  * 새 프로젝트 생성
  */
-export async function createProject(project: Omit<Project, 'id'>): Promise<string | null> {
+export async function createProject(project: Omit<Project, 'id'>): Promise<Project | null> {
   const userId = getCurrentUserId();
   return await createProjectInFirestore(userId, project);
 }
@@ -107,4 +107,31 @@ export async function fetchTaskGroups(): Promise<TaskGroup[]> {
 export async function createTaskGroup(group: Omit<TaskGroup, 'id' | 'tasks'>): Promise<string | null> {
   const userId = getCurrentUserId();
   return await createTaskGroupInFirestore(userId, group);
+}
+
+/**
+ * 새 할일 생성
+ */
+export async function createTodo(todo: Omit<Todo, 'id'>): Promise<string | null> {
+  // TODO: Firestore에서 할일 생성 함수 구현 필요
+  console.log('Creating todo:', todo);
+  return null;
+}
+
+/**
+ * 할일 업데이트
+ */
+export async function updateTodo(todoId: string, updates: Partial<Todo>): Promise<boolean> {
+  // TODO: Firestore에서 할일 업데이트 함수 구현 필요
+  console.log('Updating todo:', todoId, updates);
+  return false;
+}
+
+/**
+ * 할일 삭제
+ */
+export async function deleteTodo(todoId: string): Promise<boolean> {
+  // TODO: Firestore에서 할일 삭제 함수 구현 필요
+  console.log('Deleting todo:', todoId);
+  return false;
 }

@@ -9,7 +9,7 @@ import styles from './CreateProjectModal.module.css';
 interface CreateProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (newProject: Project) => void;
   defaultCategory?: ProjectCategory;
 }
 
@@ -76,10 +76,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, default
         daysRemaining: Math.max(0, daysRemaining)
       };
 
-      const projectId = await createProject(projectData);
+      const newProject = await createProject(projectData);
 
-      if (projectId) {
-        onSuccess();
+      if (newProject) {
+        onSuccess(newProject);
         handleClose();
       } else {
         setError('프로젝트 생성에 실패했습니다.');
