@@ -7,6 +7,7 @@ export interface Project {
   endDate: string;
   progress: number;
   daysRemaining: number;
+  category: 'personal' | 'work'; // 개인/업무 구분
 }
 
 export interface TaskGroup {
@@ -40,6 +41,8 @@ export interface DailyReport {
 }
 
 export type TabType = 'today' | 'calendar' | 'reports';
+
+export type ProjectCategory = 'personal' | 'work';
 
 export type TaskFilterType = 'all' | 'in_progress' | 'completed' | 'on_hold';
 

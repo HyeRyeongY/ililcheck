@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { logout } from '@/lib/auth';
 import { fetchProjects } from '@/lib/api';
-import type { Project } from '@/lib/types';
+import { checkAdminStatus } from '@/lib/admin';
+import type { Project, ProjectCategory } from '@/lib/types';
 import CreateProjectModal from '@/components/modals/CreateProjectModal';
 import styles from './Sidebar.module.css';
 
@@ -19,32 +20,32 @@ const navigation = [
   { name: '보고서', href: '/dashboard/reports', icon: FileText },
 ];
 
-// Master 계정인지 확인하는 함수
-const isMasterAccount = (email: string | null): boolean => {
-  if (!email) return false;
-  const masterEmail = process.env.NEXT_PUBLIC_MASTER_EMAIL;
-  return masterEmail ? email === masterEmail : false;
-};
-
 export default function Sidebar() {
   const pathname = usePathname();
-  const currentTab = pathname.includes('업무') ? '업무' : '개인';
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [currentCategory, setCurrentCategory] = useState<ProjectCategory>('personal');
 
   useEffect(() => {
     async function loadProjects() {
       if (!user) {
         setProjects([]);
+        setIsAdmin(false);
         setLoading(false);
         return;
       }
 
       try {
+        // 프로젝트 로드
         const userProjects = await fetchProjects();
         setProjects(userProjects);
+
+        // 관리자 권한 확인
+        const adminStatus = await checkAdminStatus(user.uid);
+        setIsAdmin(adminStatus);
       } catch (error) {
         console.error('프로젝트 로드 실패:', error);
         setProjects([]);
@@ -80,16 +81,18 @@ export default function Sidebar() {
       {/* 탭 */}
       <div className={styles.tabs}>
         <button
+          onClick={() => setCurrentCategory('personal')}
           className={`${styles.tab} ${
-            currentTab === '개인' ? styles.tabPersonal : styles.tabInactive
+            currentCategory === 'personal' ? styles.tabPersonal : styles.tabInactive
           }`}
         >
           <Home className="inline-block w-4 h-4 mr-2" />
           개인
         </button>
         <button
+          onClick={() => setCurrentCategory('work')}
           className={`${styles.tab} ${
-            currentTab === '업무' ? styles.tabWork : styles.tabInactive
+            currentCategory === 'work' ? styles.tabWork : styles.tabInactive
           }`}
         >
           <FileText className="inline-block w-4 h-4 mr-2" />
@@ -119,8 +122,8 @@ export default function Sidebar() {
           );
         })}
 
-        {/* Master 계정 전용: 관리자 페이지 링크 */}
-        {isMasterAccount(user?.email || null) && (
+        {/* Master 또는 Manager: 관리자 페이지 링크 */}
+        {isAdmin && (
           <Link
             href="/admin"
             className={`${styles.navLink} ${styles.adminLink} ${
@@ -151,48 +154,50 @@ export default function Sidebar() {
           </button>
         </div>
         <div className={styles.projectsList}>
-          {projects.map((project) => (
-            <Link
-              key={project.id}
-              href={`/dashboard/projects/${project.id}`}
-              className={styles.projectLink}
-            >
-              <div className={styles.projectItem}>
-                <div className={styles.projectContent}>
-                  <div className={styles.projectLeft}>
-                    <div
-                      className={styles.projectColor}
-                      style={{ backgroundColor: project.color }}
-                    />
-                    <div className={styles.projectInfo}>
-                      <p className={styles.projectName}>
-                        {project.name}
-                      </p>
-                      <p className={styles.projectDaysRemaining}>
-                        {project.daysRemaining}일 남음
-                      </p>
+          {projects
+            .filter((project) => project.category === currentCategory)
+            .map((project) => (
+              <Link
+                key={project.id}
+                href={`/dashboard/projects/${project.id}`}
+                className={styles.projectLink}
+              >
+                <div className={styles.projectItem}>
+                  <div className={styles.projectContent}>
+                    <div className={styles.projectLeft}>
+                      <div
+                        className={styles.projectColor}
+                        style={{ backgroundColor: project.color }}
+                      />
+                      <div className={styles.projectInfo}>
+                        <p className={styles.projectName}>
+                          {project.name}
+                        </p>
+                        <p className={styles.projectDaysRemaining}>
+                          {project.daysRemaining}일 남음
+                        </p>
+                      </div>
                     </div>
+                    <span className={styles.projectProgress}>
+                      {project.progress}%
+                    </span>
                   </div>
-                  <span className={styles.projectProgress}>
-                    {project.progress}%
-                  </span>
+                  {/* 진행률 바 */}
+                  <div className={styles.progressBarContainer}>
+                    <div
+                      className={styles.progressBar}
+                      style={{
+                        backgroundColor: project.color,
+                        width: `${project.progress}%`,
+                      }}
+                    />
+                  </div>
+                  <p className={styles.projectDates}>
+                    {project.startDate} ~ {project.endDate}
+                  </p>
                 </div>
-                {/* 진행률 바 */}
-                <div className={styles.progressBarContainer}>
-                  <div
-                    className={styles.progressBar}
-                    style={{
-                      backgroundColor: project.color,
-                      width: `${project.progress}%`,
-                    }}
-                  />
-                </div>
-                <p className={styles.projectDates}>
-                  {project.startDate} ~ {project.endDate}
-                </p>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
         </div>
       </div>
 
@@ -212,6 +217,7 @@ export default function Sidebar() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleProjectCreated}
+        defaultCategory={currentCategory}
       />
     </div>
   );

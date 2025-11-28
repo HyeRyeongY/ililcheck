@@ -7,6 +7,7 @@ import styles from '../login/page.module.css';
 
 export default function SignupPage() {
   const router = useRouter();
+  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -16,6 +17,11 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!displayName.trim()) {
+      setError('이름을 입력해주세요.');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('비밀번호가 일치하지 않습니다.');
@@ -29,7 +35,7 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const { user, error } = await signUpWithEmail(email, password);
+    const { user, error } = await signUpWithEmail(email, password, displayName);
 
     if (error) {
       setError('회원가입에 실패했습니다. 다시 시도해주세요.');
@@ -68,6 +74,18 @@ export default function SignupPage() {
         )}
 
         <form onSubmit={handleSignup} className={styles.form}>
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>이름 (닉네임)</label>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              className={styles.input}
+              placeholder="홍길동"
+              required
+            />
+          </div>
+
           <div className={styles.inputGroup}>
             <label className={styles.label}>이메일</label>
             <input

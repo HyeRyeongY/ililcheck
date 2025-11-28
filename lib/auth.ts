@@ -7,6 +7,7 @@ import {
   User,
   GoogleAuthProvider,
   signInWithPopup,
+  updateProfile,
 } from 'firebase/auth';
 import app from './firebase';
 import { saveUserInfo } from './admin';
@@ -17,13 +18,18 @@ const googleProvider = new GoogleAuthProvider();
 /**
  * 이메일/비밀번호로 회원가입
  */
-export async function signUpWithEmail(email: string, password: string) {
+export async function signUpWithEmail(email: string, password: string, displayName: string) {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
+    // Firebase Auth 프로필에 displayName 설정
+    await updateProfile(user, {
+      displayName: displayName,
+    });
+
     // 사용자 정보 저장
-    await saveUserInfo(user.uid, user.email, user.displayName, 'password');
+    await saveUserInfo(user.uid, user.email, displayName, 'password');
 
     return { user, error: null };
   } catch (error: any) {

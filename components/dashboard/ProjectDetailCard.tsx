@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, X, Check } from 'lucide-react';
 import { Project, TaskGroup, Task } from '@/lib/types';
+import { createTask } from '@/lib/api';
 import TaskItem from './TaskItem';
 import styles from './ProjectDetailCard.module.css';
 
@@ -12,6 +13,7 @@ interface ProjectDetailCardProps {
   onTaskStatusChange: (taskId: string, status: Task['status']) => void;
   onTaskDelete: (taskId: string) => void;
   onTaskProgressChange?: (taskId: string, progress: number) => void;
+  onTaskAdded?: () => void;
 }
 
 export default function ProjectDetailCard({
@@ -20,14 +22,53 @@ export default function ProjectDetailCard({
   onTaskStatusChange,
   onTaskDelete,
   onTaskProgressChange,
+  onTaskAdded,
 }: ProjectDetailCardProps) {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [addingTaskGroup, setAddingTaskGroup] = useState<string | null>(null);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => ({
       ...prev,
       [groupId]: !prev[groupId],
     }));
+  };
+
+  const handleAddClick = (groupId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAddingTaskGroup(groupId);
+    setExpandedGroups((prev) => ({ ...prev, [groupId]: true }));
+  };
+
+  const handleCancelAdd = () => {
+    setAddingTaskGroup(null);
+    setNewTaskTitle('');
+  };
+
+  const handleSubmitTask = async (groupId: string) => {
+    if (!newTaskTitle.trim()) return;
+
+    try {
+      await createTask({
+        title: newTaskTitle,
+        status: 'todo',
+        progress: 0,
+        userId: '',
+        groupId: groupId,
+        projectId: project.id,
+      });
+
+      setNewTaskTitle('');
+      setAddingTaskGroup(null);
+
+      // 부모 컴포넌트에 작업 추가 알림
+      if (onTaskAdded) {
+        onTaskAdded();
+      }
+    } catch (error) {
+      console.error('작업 추가 실패:', error);
+    }
   };
 
   return (
@@ -62,7 +103,13 @@ export default function ProjectDetailCard({
                   <span className={styles.taskCount}>
                     {completedCount}/{group.tasks.length}개
                   </span>
-                  <Plus className={styles.addIcon} />
+                  <button
+                    onClick={(e) => handleAddClick(group.id, e)}
+                    className={styles.addButton}
+                    title="작업 추가"
+                  >
+                    <Plus className={styles.addIcon} />
+                  </button>
                 </div>
               </button>
 
@@ -97,6 +144,43 @@ export default function ProjectDetailCard({
                       onProgressChange={onTaskProgressChange}
                     />
                   ))}
+
+                  {/* 작업 추가 폼 */}
+                  {addingTaskGroup === group.id && (
+                    <div className={styles.addTaskForm}>
+                      <input
+                        type="text"
+                        value={newTaskTitle}
+                        onChange={(e) => setNewTaskTitle(e.target.value)}
+                        placeholder="작업 제목을 입력하세요..."
+                        className={styles.addTaskInput}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSubmitTask(group.id);
+                          } else if (e.key === 'Escape') {
+                            handleCancelAdd();
+                          }
+                        }}
+                      />
+                      <div className={styles.addTaskActions}>
+                        <button
+                          onClick={() => handleSubmitTask(group.id)}
+                          className={styles.confirmButton}
+                          title="추가"
+                        >
+                          <Check size={16} />
+                        </button>
+                        <button
+                          onClick={handleCancelAdd}
+                          className={styles.cancelButton}
+                          title="취소"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

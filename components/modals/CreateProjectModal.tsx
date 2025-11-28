@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { createProject } from '@/lib/api';
-import type { Project } from '@/lib/types';
+import type { Project, ProjectCategory } from '@/lib/types';
 import styles from './CreateProjectModal.module.css';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  defaultCategory?: ProjectCategory;
 }
 
 const PRESET_COLORS = [
@@ -17,14 +18,21 @@ const PRESET_COLORS = [
   '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788'
 ];
 
-export default function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProjectModalProps) {
+export default function CreateProjectModal({ isOpen, onClose, onSuccess, defaultCategory = 'personal' }: CreateProjectModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     startDate: '',
     endDate: '',
-    color: PRESET_COLORS[0]
+    color: PRESET_COLORS[0],
+    category: defaultCategory as ProjectCategory
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(prev => ({ ...prev, category: defaultCategory }));
+    }
+  }, [isOpen, defaultCategory]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 

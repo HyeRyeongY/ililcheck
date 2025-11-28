@@ -70,10 +70,30 @@
   color: #6b7280;
 }
 
+.addButton {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addButton:hover {
+  background-color: #f3f4f6;
+}
+
 .addIcon {
   width: 1rem;
   height: 1rem;
   color: #9ca3af;
+}
+
+.addButton:hover .addIcon {
+  color: #6b7280;
 }
 
 .groupProgress {
@@ -115,4 +135,66 @@
 .tasksList {
   margin-left: 1.5rem;
   margin-top: 0.75rem;
+}
+
+/* 작업 추가 폼 */
+.addTaskForm {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.addTaskInput {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.addTaskInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.addTaskActions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.confirmButton,
+.cancelButton {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.confirmButton {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.confirmButton:hover {
+  background-color: #2563eb;
+}
+
+.cancelButton {
+  background-color: #e5e7eb;
+  color: #6b7280;
+}
+
+.cancelButton:hover {
+  background-color: #d1d5db;
 }

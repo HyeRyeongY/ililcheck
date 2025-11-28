@@ -117,6 +117,16 @@ export default function TodayPage() {
     setIsSyncing(false);
   };
 
+  // 작업 추가 후 새로고침
+  const handleTaskAdded = async () => {
+    try {
+      const userTaskGroups = await fetchTaskGroups();
+      setTasks(userTaskGroups);
+    } catch (error) {
+      console.error('작업 그룹 새로고침 실패:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -172,6 +182,7 @@ export default function TodayPage() {
                     onTaskStatusChange={handleTaskStatusChange}
                     onTaskDelete={handleTaskDelete}
                     onTaskProgressChange={handleTaskProgressChange}
+                    onTaskAdded={handleTaskAdded}
                   />
                 );
               })
