@@ -5,34 +5,38 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchTaskGroups, fetchProjects } from '@/lib/api';
-import { TaskGroup, Project } from '@/lib/types';
+import { fetchProjects, fetchTasksByProject } from '@/lib/api';
+import { Project, Task, Todo } from '@/lib/types';
 import styles from './page.module.css';
 
 export default function CalendarPage() {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [taskGroups, setTaskGroups] = useState<TaskGroup[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       if (!user) {
-        setTaskGroups([]);
         setProjects([]);
+        setAllTasks([]);
         setLoading(false);
         return;
       }
 
       try {
-        const [userTaskGroups, userProjects] = await Promise.all([
-          fetchTaskGroups(),
-          fetchProjects(),
-        ]);
-        setTaskGroups(userTaskGroups);
+        const userProjects = await fetchProjects();
         setProjects(userProjects);
+
+        // 모든 프로젝트의 작업 로드
+        const allProjectTasks: Task[] = [];
+        for (const project of userProjects) {
+          const projectTasks = await fetchTasksByProject(project.id);
+          allProjectTasks.push(...projectTasks);
+        }
+        setAllTasks(allProjectTasks);
       } catch (error) {
         console.error('데이터 로드 실패:', error);
       } finally {
@@ -65,18 +69,21 @@ export default function CalendarPage() {
     setSelectedDate(today);
   };
 
-  // 선택된 날짜의 작업 가져오기
-  const allTasks = taskGroups.flatMap((group) => group.tasks);
-  const selectedDateTasks = allTasks.filter(task => {
-    if (!task.dueDate) return false;
-    const taskDate = new Date(task.dueDate);
-    return isSameDay(taskDate, selectedDate);
+  // 모든 할일 추출
+  const allTodos = allTasks.flatMap(task => 
+    task.todos.map(todo => ({ ...todo, taskTitle: task.title, projectId: task.projectId }))
+  );
+
+  // 선택된 날짜의 할일 가져오기
+  const selectedDateTodos = allTodos.filter(todo => {
+    if (!todo.dueDate) return false;
+    return todo.dueDate === format(selectedDate, 'yyyy-MM-dd');
   });
 
-  const inProgressCount = allTasks.filter((t) => t.status === 'in_progress').length;
-  const completedCount = allTasks.filter((t) => t.status === 'completed').length;
-  const onHoldCount = allTasks.filter((t) => t.status === 'on_hold').length;
-  const totalCount = allTasks.length;
+  const inProgressCount = allTodos.filter((t) => t.status === 'in_progress').length;
+  const completedCount = allTodos.filter((t) => t.status === 'completed').length;
+  const onHoldCount = allTodos.filter((t) => t.status === 'on_hold' || !t.dueDate).length;
+  const totalCount = allTodos.length;
   const completionRate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   if (loading) {
@@ -149,11 +156,10 @@ export default function CalendarPage() {
                 const isSelected = isSameDay(day, selectedDate);
                 const dayOfWeek = day.getDay();
 
-                // 해당 날짜의 작업 수
-                const dayTasks = allTasks.filter(task => {
-                  if (!task.dueDate) return false;
-                  const taskDate = new Date(task.dueDate);
-                  return isSameDay(taskDate, day);
+                // 해당 날짜의 할일 수
+                const dayTodos = allTodos.filter(todo => {
+                  if (!todo.dueDate) return false;
+                  return todo.dueDate === format(day, 'yyyy-MM-dd');
                 });
 
                 return (
@@ -176,14 +182,14 @@ export default function CalendarPage() {
                       {format(day, 'd')}
                     </span>
 
-                    {/* 작업 점 표시 */}
-                    {dayTasks.length > 0 && (
+                    {/* 할일 점 표시 */}
+                    {dayTodos.length > 0 && (
                       <div className={styles.taskDots}>
-                        {dayTasks.slice(0, 3).map((task) => (
+                        {dayTodos.slice(0, 3).map((todo) => (
                           <div
-                            key={task.id}
+                            key={todo.id}
                             className={`${styles.taskDot} ${
-                              task.status === 'completed' ? styles.taskDotCompleted : styles.taskDotInProgress
+                              todo.status === 'completed' ? styles.taskDotCompleted : styles.taskDotInProgress
                             }`}
                           />
                         ))}
@@ -202,7 +208,7 @@ export default function CalendarPage() {
                 {format(selectedDate, 'yyyy년 MM월 dd일 EEEE', { locale: ko })}
               </h2>
               <p className={styles.sidebarSubtitle}>
-                {selectedDateTasks.length}개의 할 일
+                {selectedDateTodos.length}개의 할 일
               </p>
             </div>
 
@@ -231,32 +237,40 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            {/* 프로젝트 목록 */}
+            {/* 선택된 날짜의 할일 목록 */}
             <div className={styles.projectsSection}>
-              <h3 className={styles.projectsSectionTitle}>프로젝트</h3>
+              <h3 className={styles.projectsSectionTitle}>이 날의 할일</h3>
 
               <div className={styles.projectsList}>
-                {projects.length === 0 ? (
-                  <p className={styles.emptyState}>프로젝트가 없습니다.</p>
+                {selectedDateTodos.length === 0 ? (
+                  <p className={styles.emptyState}>이 날에는 할일이 없습니다.</p>
                 ) : (
-                  projects.map((project) => {
-                    const projectTaskGroups = taskGroups.filter(g => g.projectId === project.id);
-                    const projectTasks = projectTaskGroups.flatMap(g => g.tasks);
-
+                  selectedDateTodos.map((todo) => {
+                    const project = projects.find(p => p.id === todo.projectId);
+                    
                     return (
-                      <div key={project.id} className={styles.projectItem}>
+                      <div key={todo.id} className={styles.projectItem}>
                         <div className={styles.projectItemHeader}>
-                          <h4 className={styles.projectItemTitle}>{project.name}</h4>
-                          <button className={styles.projectItemAddButton}>+ 추가</button>
-                        </div>
-                        <div className={styles.projectTasks}>
-                          {projectTaskGroups.map((group) => (
-                            <div key={group.id} className={styles.projectTask}>
-                              <input type="checkbox" className={styles.projectTaskCheckbox} readOnly />
-                              <span className={styles.projectTaskTitle}>{group.name}</span>
-                              <span className={styles.projectTaskCount}>{group.tasks.length}개</span>
+                          <div className={styles.todoItemContent}>
+                            <div className={`${styles.todoStatusDot} ${styles[todo.status]}`} />
+                            <div className={styles.todoDetails}>
+                              <h4 className={styles.projectItemTitle}>{todo.title}</h4>
+                              <p className={styles.todoProjectInfo}>
+                                <span className={styles.todoTaskTitle}>{todo.taskTitle}</span>
+                                {project && (
+                                  <>
+                                    <span className={styles.todoDivider}>•</span>
+                                    <span 
+                                      className={styles.todoProjectName}
+                                      style={{ color: project.color }}
+                                    >
+                                      {project.name}
+                                    </span>
+                                  </>
+                                )}
+                              </p>
                             </div>
-                          ))}
+                          </div>
                         </div>
                       </div>
                     );

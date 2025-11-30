@@ -1,3 +1,4 @@
+/* app/dashboard/projects/[id]/page.module.css */
 .container {
   height: 100%;
   display: flex;
@@ -9,30 +10,37 @@
   background-color: white;
   border-bottom: 1px solid #e5e7eb;
   padding: 1rem 1.5rem;
+  transition: all 0.3s ease-in-out;
+}
+.headerExpanded {
+  padding-bottom: 1.5rem;
 }
 
 .headerContent {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
 }
 
 .headerLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-grow: 1;
+  gap: 0.25rem;
+}
+
+.titleSection {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
 .projectColorBox {
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 0.25rem;
+  height: 1.25rem;
   border-radius: 0.125rem;
-}
-
-.titleSection {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .title {
@@ -42,389 +50,182 @@
   margin: 0;
 }
 
-.editTitleButton {
-  padding: 0.375rem;
-  border-radius: 0.375rem;
+.headerDates {
+  font-size: 0.875rem;
   color: #6b7280;
-  transition: all 0.2s ease;
-  opacity: 0.7;
-}
-
-.editTitleButton:hover {
-  background-color: #f3f4f6;
-  color: #374151;
-  opacity: 1;
+  margin: 0;
+  padding-left: calc(0.75rem + 0.25rem); /* icon gap + icon width */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .titleInput {
+  font-family: inherit;
   font-size: 1.25rem;
   font-weight: 600;
   color: #111827;
-  background-color: white;
-  border: 2px solid #3b82f6;
-  border-radius: 0.375rem;
   padding: 0.5rem 0.75rem;
-  transition: all 0.2s ease;
-  min-width: 200px;
-  max-width: 100%;
-  width: auto;
-  flex: 1;
+  border-radius: 0.375rem;
+  background-color: #f9fafb;
+  border: 1px solid #d1d5db;
 }
 
-.titleInput:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.dateInputWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #111827;
+  background-color: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+
+.dateSeparator {
+  color: #9ca3af;
 }
 
 .headerActions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.cancelButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  padding: 0.5rem 1rem;
-  min-width: 5rem;
-  max-width: 5rem;
-  height: 2.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #6b7280;
-  background-color: white;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-  white-space: nowrap;
   flex-shrink: 0;
 }
 
-.cancelButton:hover {
-  background-color: #f9fafb;
-  border-color: #9ca3af;
+.moreButton {
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+.moreButton:hover {
+  background-color: #f3f4f6;
   color: #374151;
 }
+.moreButton.moreButtonActive {
+  background-color: #eff6ff;
+  color: #3b82f6;
+}
 
+.cancelButton,
 .completeButton {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
   padding: 0.5rem 1rem;
-  min-width: 5rem;
-  max-width: 5rem;
   height: 2.5rem;
   font-size: 0.875rem;
   font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.cancelButton {
+  color: #6b7280;
+  background-color: white;
+  border: 1px solid #d1d5db;
+}
+.cancelButton:hover {
+  background-color: #f9fafb;
+}
+
+.completeButton {
   color: white;
   background-color: #3b82f6;
   border: 1px solid #3b82f6;
-  border-radius: 0.375rem;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-  white-space: nowrap;
-  flex-shrink: 0;
 }
-
 .completeButton:hover {
   background-color: #2563eb;
-  border-color: #2563eb;
 }
 
-.settingsButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  padding: 0.5rem 1rem;
-  min-width: 4rem;
-  height: 2.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  border-radius: 0.375rem;
-  transition: background-color 0.2s;
-  white-space: nowrap;
+.expandedHeaderContent {
+  margin-top: 1.5rem;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-.settingsButton:hover {
-  background-color: #f3f4f6;
-}
-
-/* 프로젝트 개요 섹션 */
-.projectOverview {
-  background-color: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 1.5rem;
-}
-
-.overviewContent {
-  max-width: 64rem;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.basicInfoSection {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-/* 추가 설정 영역 */
-.additionalSettings {
-  padding: 1.5rem;
-  margin-top: 1rem;
-  background-color: #f8fafc;
-  border-radius: 0.75rem;
-  border: 1px solid #e5e7eb;
-  animation: slideDown 0.3s ease-out;
-}
-
-.settingsRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  margin-bottom: 1.5rem;
-}
-
-.settingField {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.overviewDates {
-  display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
-
-.dateItem {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.dateLabel {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #6b7280;
-}
-
-.dateValue {
-  font-size: 0.875rem;
-  color: #111827;
-  font-weight: 500;
-}
-
-.dateValue:empty::after,
-.dateValue[data-empty]::after {
-  content: "날짜 설정";
-  color: #9ca3af;
-  font-style: italic;
-}
-
-.overviewDescription {
-  padding: 1rem;
+.projectDetailBox {
   background-color: #f9fafb;
+  padding: 1rem;
   border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
 }
 
-.overviewDescription p {
+.descriptionContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.descriptionArea {
   margin: 0;
   color: #374151;
   line-height: 1.6;
-}
-
-.overviewProgress {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.progressInfo {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.progressLabel {
+  flex-grow: 1;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
 }
 
-/* 인라인 편집 스타일 */
-.editable {
-  cursor: pointer;
-  border-radius: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  margin: -0.25rem -0.5rem;
-  transition: all 0.2s ease;
-  border: 2px solid transparent;
-}
-
-.editable:hover {
-  background-color: #f0f9ff;
-  border-color: #3b82f6;
-  color: #1d4ed8;
-}
-
-.inlineEditField {
+.editDescriptionButton {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
-}
-
-.dateInput,
-.nameInput {
   padding: 0.5rem 0.75rem;
-  border: 2px solid #3b82f6;
   border-radius: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
+  color: #374151;
+  transition: all 0.2s;
+  border: 1px solid #e5e7eb;
   background-color: white;
-  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 1rem;
+}
+.editDescriptionButton:hover {
+  background-color: #f3f4f6;
 }
 
-.dateInput:focus,
-.nameInput:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.settingsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.descriptionSettings {
+  grid-column: 1 / -1;
+}
+
+.advancedSettings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.categorySettings,
+.colorSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .descriptionTextarea {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #3b82f6;
+  border: 1px solid #d1d5db;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   line-height: 1.6;
   resize: vertical;
-  background-color: white;
   transition: all 0.2s ease;
+  background-color: white;
 }
-
 .descriptionTextarea:focus {
   outline: none;
+  border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.descriptionText {
-  margin: 0;
-  color: #374151;
-  line-height: 1.6;
-  min-height: 1.5rem;
-}
-
-.descriptionText:empty::after {
-  content: "설명 추가하기";
-  color: #9ca3af;
-  font-style: italic;
-}
-
-/* 빈 값에 대한 플레이스홀더 스타일 */
-.editable.empty {
-  color: #9ca3af;
-  font-style: italic;
-}
-
-.editHint {
-  font-size: 0.75rem;
-  color: #6b7280;
-  font-style: italic;
-}
-
-.fieldValue {
-  color: #111827;
-  font-weight: 500;
-}
-
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-/* 애니메이션 */
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    max-height: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-  }
-  to {
-    opacity: 1;
-    max-height: 1000px;
-    padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
-  }
-}
-
-/* 반응형 */
-@media (max-width: 768px) {
-  .overviewDates {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .projectOverview {
-    padding: 1rem;
-  }
-
-  .additionalSettings {
-    padding: 1rem;
-  }
-
-  .settingsRow {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
-.content {
-  flex: 1;
-  padding: 1.5rem;
-  overflow-y: auto;
-}
-
-.contentInner {
-  max-width: 64rem;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.card {
-  background-color: white;
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-  padding: 1.5rem;
-}
-
-.cardTitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 1rem;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.5rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
 }
 
 .label {
@@ -435,298 +236,8 @@
   display: block;
 }
 
-.dateField {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background-color: #f9fafb;
-  border-radius: 0.375rem;
-}
-
-.dateText {
-  font-size: 0.875rem;
-  color: #111827;
-}
-
-.progressSection {
-  margin-top: 1.5rem;
-}
-
-.progressHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-
-.progressValue {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.progressSubtext {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-top: 0.5rem;
-}
-
-.tasksSection {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.taskGroup {
-  display: flex;
-  flex-direction: column;
-}
-
-.taskGroupHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.taskGroupTitle {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.taskGroupCount {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.taskGroupProgress {
-  margin-bottom: 0.75rem;
-}
-
-.taskList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding-left: 1rem;
-}
-
-.task {
-  padding: 0.75rem;
-  border-radius: 0.375rem;
-  border: 1px solid;
-  transition: background-color 0.2s;
-}
-
-.taskDefault {
-  background-color: #f9fafb;
-  border-color: #e5e7eb;
-}
-
-.taskCompleted {
-  background-color: #f0fdf4;
-  border-color: #bbf7d0;
-}
-
-.taskContent {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.taskCheckbox {
-  margin-top: 0.125rem;
-}
-
-.taskBody {
-  flex: 1;
-}
-
-.taskTitle {
-  font-size: 0.875rem;
-  color: #111827;
-}
-
-.taskTitleCompleted {
-  text-decoration: line-through;
-  color: #6b7280;
-}
-
-.taskProgressContainer {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.taskProgressBar {
-  flex: 1;
-  max-width: 12rem;
-  height: 0.375rem;
-  background-color: #e5e7eb;
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.taskProgressFill {
-  height: 100%;
-  border-radius: 9999px;
-}
-
-.taskProgressFillDefault {
-  background-color: #3b82f6;
-}
-
-.taskProgressFillCompleted {
-  background-color: #22c55e;
-}
-
-.taskProgressText {
-  font-size: 0.75rem;
-  color: #4b5563;
-}
-
-.settingsOverlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 50;
-}
-
-.settingsSidebar {
-  position: absolute;
-  right: 0;
-  top: 0;
-  height: 100%;
-  width: 24rem;
-  background-color: white;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.settingsHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.settingsTitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.closeButton {
-  padding: 0.25rem;
-  border-radius: 0.375rem;
-  transition: background-color 0.2s;
-}
-
-.closeButton:hover {
-  background-color: #f3f4f6;
-}
-
-.settingsContent {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.inputField {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-}
-
-.inputField:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #3b82f6;
-}
-
-.colorPalette {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.colorButton {
-  height: 2.45rem;
-  aspect-ratio: 1 / 1;
-  border-radius: 0.5rem;
-  transition: transform 0.2s;
-}
-
-.colorButton:hover {
-  transform: scale(1.1);
-}
-
-.colorButtonSelected {
-  box-shadow: 0 0 0 2px white, 0 0 0 4px #3b82f6;
-}
-
-.gridTwo {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.textareaField {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  resize: none;
-}
-
-.textareaField:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #3b82f6;
-}
-
-.taskGroupList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.taskGroupItem {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.taskGroupItemContent {
-  flex: 1;
-  padding: 0.5rem 0.75rem;
-  background-color: #f9fafb;
-  border-radius: 0.375rem;
-}
-
-.taskGroupItemTitle {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #111827;
-}
-
-.taskGroupItemProgress {
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-top: 0.25rem;
-}
-
-.taskGroupItemProgressBar {
-  width: 5rem;
-}
-
-/* 카테고리 버튼 스타일 */
 .categoryButtons {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
   gap: 0.5rem;
 }
 
@@ -744,10 +255,8 @@
   color: #6b7280;
   border-color: #d1d5db;
 }
-
 .categoryButtonDefault:hover {
   background-color: #f9fafb;
-  border-color: #9ca3af;
 }
 
 .categoryButtonSelected {
@@ -756,667 +265,218 @@
   border-color: #3b82f6;
 }
 
-.categoryButtonSelected:hover {
-  background-color: #2563eb;
-  border-color: #2563eb;
-}
-
-/* 버튼 그룹 스타일 */
-.buttonGroup {
+.colorPalette {
   display: flex;
-  gap: 0.75rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.cancelButton {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  background-color: white;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.cancelButton:hover {
-  background-color: #f9fafb;
-  border-color: #9ca3af;
-}
-
-.saveButton {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  background-color: #3b82f6;
-  color: white;
-  border: 1px solid #3b82f6;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.saveButton:hover:not(:disabled) {
-  background-color: #2563eb;
-  border-color: #2563eb;
-}
-
-.saveButton:disabled {
-  background-color: #9ca3af;
-  border-color: #9ca3af;
-  cursor: not-allowed;
-}
-
-/* 작업 목록 헤더 */
-.cardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.addTaskButton {
-  display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  color: #3b82f6;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s;
 }
 
-.addTaskButton:hover {
-  background-color: #eff6ff;
-}
-
-/* 빈 상태 스타일 */
-.emptyTaskState {
-  text-align: center;
-  padding: 3rem 2rem;
-}
-
-.emptyStateTitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.25rem;
-}
-
-.emptyStateText {
-  color: #6b7280;
-}
-
-.emptyAddButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #3b82f6;
-  color: white;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.emptyAddButton:hover {
-  background-color: #2563eb;
-}
-
-/* 모달 스타일 */
-.modalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.2s ease-out;
-}
-
-.modal {
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  width: 90%;
-  max-width: 32rem;
-  animation: slideIn 0.2s ease-out;
-}
-
-.modalHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem 1.5rem 0 1.5rem;
-}
-
-.modalTitle {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.modalCloseButton {
-  padding: 0.25rem;
-  border-radius: 0.375rem;
-  color: #6b7280;
-  transition: all 0.2s;
-}
-
-.modalCloseButton:hover {
-  background-color: #f3f4f6;
-  color: #374151;
-}
-
-.modalContent {
-  padding: 1.5rem;
-}
-
-.formGroup {
-  margin-bottom: 1.5rem;
-}
-
-.formGroup:last-child {
-  margin-bottom: 0;
-}
-
-.input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  resize: none;
-  transition: all 0.2s;
-}
-
-.textarea:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.modalActions {
-  display: flex;
-  gap: 0.75rem;
-  padding: 0 1.5rem 1.5rem 1.5rem;
-}
-
-.cancelBtn {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  background-color: white;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.cancelBtn:hover {
-  background-color: #f9fafb;
-  border-color: #9ca3af;
-  color: #374151;
-}
-
-.createBtn {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  background-color: #3b82f6;
-  color: white;
-  border: 1px solid #3b82f6;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.createBtn:hover:not(:disabled) {
-  background-color: #2563eb;
-  border-color: #2563eb;
-}
-
-.createBtn:disabled {
-  background-color: #9ca3af;
-  border-color: #9ca3af;
-  cursor: not-allowed;
-}
-
-/* 인라인 편집 스타일 */
-.newTaskGroupInput {
-  padding: 1rem;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
-  margin-bottom: 1.5rem;
-  border: 2px solid #e5e7eb;
-}
-
-.editingTaskGroup {
-  width: 100%;
-}
-
-.taskGroupTitleContainer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.taskGroupTitle {
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  transition: background-color 0.2s;
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.taskGroupTitle:hover {
-  background-color: #f3f4f6;
-}
-
-.inlineInput {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  transition: border-color 0.2s;
-}
-
-.inlineInput:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.inlineActions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
-
-.cancelInlineBtn {
-  padding: 0.375rem 0.75rem;
-  background-color: white;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.cancelInlineBtn:hover {
-  background-color: #f9fafb;
-  color: #374151;
-}
-
-.saveInlineBtn {
-  padding: 0.375rem 0.75rem;
-  background-color: #3b82f6;
-  color: white;
-  border: 1px solid #3b82f6;
-  border-radius: 0.375rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.saveInlineBtn:hover:not(:disabled) {
-  background-color: #2563eb;
-}
-
-.saveInlineBtn:disabled {
-  background-color: #9ca3af;
-  border-color: #9ca3af;
-  cursor: not-allowed;
-}
-
-/* 추가 버튼 비활성화 상태 */
-.addTaskButton:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
-}
-
-.addTaskButton:disabled:hover {
-  background-color: #9ca3af;
-}
-
-/* 작업 및 할일 스타일 */
-.taskItem {
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  background-color: white;
-  overflow: hidden;
-}
-
-.taskHeader {
-  display: flex;
-  align-items: flex-start;
-  padding: 1rem;
-  gap: 0.75rem;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.taskInfo {
-  flex: 1;
-}
-
-.taskTitle {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 0.5rem 0;
-}
-
-.taskMeta {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.todoCount {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.addTodoBtn {
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  color: #3b82f6;
-  transition: all 0.2s;
-}
-
-.addTodoBtn:hover {
-  background-color: #eff6ff;
-}
-
-.taskToggle {
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  color: #6b7280;
-  transition: all 0.2s;
-}
-
-.taskToggle:hover {
-  background-color: #f3f4f6;
-  color: #374151;
-}
-
-/* 할일 목록 */
-.todoList {
-  background-color: #f9fafb;
-  border-top: 1px solid #e5e7eb;
-}
-
-.todoItem {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  transition: background-color 0.2s;
-}
-
-.todoItem:hover {
-  background-color: #f3f4f6;
-}
-
-.todoItem:last-child {
-  border-bottom: none;
-}
-
-.todoContent {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-
-.todoInfo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-}
-
-.todoStatus {
-  width: 0.5rem;
-  height: 0.5rem;
+.colorButton {
+  width: 2rem;
+  height: 2rem;
   border-radius: 50%;
+  transition: transform 0.2s;
+  border: 2px solid transparent;
 }
-
-.todoStatus.todo {
-  background-color: #d1d5db;
+.colorButton:hover {
+  transform: scale(1.1);
 }
-
-.todoStatus.in_progress {
-  background-color: #3b82f6;
-}
-
-.todoStatus.completed {
-  background-color: #22c55e;
-}
-
-.todoStatus.on_hold {
-  background-color: #f59e0b;
-}
-
-.todoStatus.postponed {
-  background-color: #ef4444;
-}
-
-.todoTitle {
-  font-size: 0.875rem;
-  color: #374151;
-}
-
-.todoTitle.completed {
-  text-decoration: line-through;
-  color: #9ca3af;
-}
-.todoControls {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.todoProgress {
-  flex-shrink: 1;
-}
-
-/* 할일 액션 버튼들 */
-.todoActions {
-  flex-shrink: 0;
-  display: flex;
-  gap: 0.3rem;
-  flex-wrap: wrap;
-}
-
-.todoActionBtn {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s;
-  border: 1px solid #e5e7eb;
-  background-color: white;
-  color: #6b7280;
-}
-
-.todoActionBtn:hover {
-  background-color: #f9fafb;
-  border-color: #d1d5db;
-}
-
-.todoActionBtn.deleteBtn {
-  color: #dc2626;
-  border-color: #fecaca;
-}
-
-.todoActionBtn.deleteBtn:hover {
-  background-color: #fef2f2;
-  border-color: #fca5a5;
-}
-
-/* 입력 필드들 */
-.addTaskInput,
-.addTodoInput {
-  padding: 1rem;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
-  margin: 0.5rem;
-}
-
-.taskInput,
-.todoInput {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  margin-bottom: 0.75rem;
-}
-
-.taskInput:focus,
-.todoInput:focus {
-  outline: none;
+.colorButtonSelected {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.taskInputActions,
-.todoInputActions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
-
-.cancelTaskBtn,
-.cancelTodoBtn {
-  padding: 0.375rem 0.75rem;
-  background-color: white;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.cancelTaskBtn:hover,
-.cancelTodoBtn:hover {
-  background-color: #f9fafb;
-}
-
-.saveTaskBtn,
-.saveTodoBtn {
-  padding: 0.375rem 0.75rem;
-  background-color: #3b82f6;
-  color: white;
-  border: 1px solid #3b82f6;
-  border-radius: 0.375rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.saveTaskBtn:hover:not(:disabled),
-.saveTodoBtn:hover:not(:disabled) {
-  background-color: #2563eb;
-}
-
-.saveTaskBtn:disabled,
-.saveTodoBtn:disabled {
-  background-color: #9ca3af;
-  border-color: #9ca3af;
-  cursor: not-allowed;
-}
-
-/* 작업 추가 버튼 */
-.addTaskBtn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  margin: 0.5rem;
-  background-color: #f9fafb;
-  color: #6b7280;
-  border: 2px dashed #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-  width: calc(100% - 1rem);
-}
-
-.addTaskBtn:hover {
-  background-color: #f3f4f6;
-  border-color: #9ca3af;
-  color: #374151;
-}
-
-/* 빈 상태 */
-.emptyTodos {
-  padding: 2rem 1rem;
-  text-align: center;
-  color: #6b7280;
-  font-size: 0.875rem;
-}
-
-/* 반응형 */
-@media (max-width: 640px) {
-  .taskHeader {
-    padding: 0.75rem;
-    flex-wrap: wrap;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
+/* Rest of the styles */
+.content { flex: 1; padding: 1.5rem; overflow-y: auto; }
+.contentInner { max-width: 64rem; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
+.card { background-color: white; border-radius: 0.5rem; border: 1px solid #e5e7eb; padding: 1.5rem; margin: 1.5rem; }
+
+/* 진행률 섹션 */
+.progressSection { margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e5e7eb; }
+.progressInfo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.progressTitle { font-size: 1rem; font-weight: 600; color: #111827; margin: 0; }
+.progressText { font-size: 0.875rem; color: #6b7280; }
+.progressBarWrapper { width: 100%; }
+.projectProgressContainer { width: 100%; display: flex; align-items: center; }
+.cardHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.cardTitle { font-size: 1.125rem; font-weight: 600; color: #111827; }
+.addTaskButton { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #3b82f6; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
+.addTaskButton:hover { background-color: #eff6ff; }
+.addTaskButton:disabled { color: #9ca3af; background-color: #f3f4f6; cursor: not-allowed; }
+.addTaskInput { padding: 1rem; background-color: #f9fafb; border-radius: 0.5rem; margin: 0.5rem 0; }
+.taskInput { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; margin-bottom: 0.75rem; }
+.taskInputActions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+.cancelTaskBtn, .saveTaskBtn { padding: 0.375rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 500; transition: all 0.2s; }
+.cancelTaskBtn { background-color: white; color: #6b7280; border: 1px solid #d1d5db; }
+.saveTaskBtn { background-color: #3b82f6; color: white; border: 1px solid #3b82f6; }
+.saveTaskBtn:disabled { background-color: #9ca3af; border-color: #9ca3af; cursor: not-allowed; }
+.emptyTaskState { text-align: center; padding: 3rem 2rem; border: 2px dashed #e5e7eb; border-radius: 0.5rem; }
+.emptyStateTitle { font-size: 1.125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; }
+.emptyStateText { color: #6b7280; }
+.tasksSection { display: flex; flex-direction: column; gap: 1rem; }
+.taskItem { border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: white; overflow: hidden; }
+.taskHeader { display: flex; align-items: flex-start; padding: 1rem; gap: 0.75rem; }
+.taskHeaderClickable { cursor: pointer; transition: background-color 0.2s; }
+.taskHeaderClickable:hover { background-color: #f9fafb; }
+.taskInfo { flex: 1; }
+.taskTitleWrapper { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.2s; }
+.taskTitleWrapper:hover .taskTitle { color: #3b82f6; }
+.taskTitleWrapper:hover .editIcon { opacity: 1; }
+.taskTitle { font-size: 1rem; font-weight: 600; color: #111827; margin: 0; transition: color 0.2s; border-bottom: 2px solid transparent; word-break: break-word; line-height: 1.4; }
+.editTaskInput { font-size: 1rem; font-weight: 600; color: #111827; border: none; outline: none; background: transparent; border-bottom: 2px solid #3b82f6; padding: 0; width: 100%; max-width: 300px; }
+.taskMeta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.taskProgressContainer { width: 258px; display: flex; align-items: center; height: 20px; }
+
+/* 작업 제목 섹션 */
+.taskTitleSection { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+.taskStatusIcon { 
+  width: 1.5rem; 
+  height: 1.5rem; 
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  flex-shrink: 0;
+}
+.taskStatusIcon.completed { background-color: #dcfce7; color: #22c55e; }
+.taskStatusIcon.inProgress { background-color: #eff6ff; color: #3b82f6; }
+.taskStatusIcon.pending { background-color: #f9fafb; }
+.todoStatusDot { 
+  width: 0.375rem; 
+  height: 0.375rem; 
+  border-radius: 50%; 
+  background-color: #d1d5db; 
+}
+
+/* 작업 통계 정보 */
+.taskStatsInfo { display: flex; align-items: center; gap:0.75rem; }
+.todoBadge { 
+  font-size: 0.75rem; 
+  font-weight: 600; 
+  color: #6b7280;
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.5rem;
+  border-radius: 1rem;
+  border: 1px solid #e5e7eb;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.clickHint { color: #9ca3af; font-size: 0.75rem; }
+.addTodoBtn, .taskToggle { padding: 0.5rem; border-radius: 0.375rem; color: #6b7280; transition: all 0.2s; }
+.addTodoBtn:hover, .taskToggle:hover { background-color: #f3f4f6; color: #374151; }
+.todoList { background-color: #f9fafb; border-top: 1px solid #e5e7eb; }
+.addTodoInput { padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; }
+.todoInput { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; margin-bottom: 0.75rem; }
+.todoInputActions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+.cancelTodoBtn, .saveTodoBtn { padding: 0.375rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 500; transition: all 0.2s; }
+.cancelTodoBtn { background-color: white; color: #6b7280; border: 1px solid #d1d5db; }
+.saveTodoBtn { background-color: #3b82f6; color: white; border: 1px solid #3b82f6; }
+.saveTodoBtn:disabled { background-color: #9ca3af; border-color: #9ca3af; cursor: not-allowed; }
+.todoItem { display: flex; flex-direction: column; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; transition: background-color 0.2s; gap: 0.5rem; }
+.todoItem:hover { background-color: #f3f4f6; }
+.todoItem:last-child { border-bottom: none; }
+.todoContent { display: flex; align-items: flex-start; gap: 0.75rem; width: 100%; min-width: 0; }
+.todoInfo { display: flex; align-items: center; gap: 0.5rem; min-width: 0; flex: 1; }
+.todoStatus { width: 0.5rem; height: 0.5rem; border-radius: 50%; flex-shrink: 0;}
+.todoStatus.todo { background-color: #d1d5db; }
+.todoStatus.in_progress { background-color: #3b82f6; }
+.todoStatus.completed { background-color: #22c55e; }
+.todoStatus.on_hold { background-color: #f59e0b; }
+.todoStatus.postponed { background-color: #ef4444; }
+.todoTitleWrapper { display: inline-flex; align-items: flex-start; gap: 0.25rem; cursor: pointer; transition: all 0.2s; }
+.todoTitleWrapper:hover .todoTitle { color: #3b82f6; }
+.todoTitleWrapper:hover .editIcon { opacity: 1; }
+.todoTitle { font-size: 0.875rem; color: #374151; transition: color 0.2s; border-bottom: 1px solid transparent; word-break: break-word; line-height: 1.4; }
+.todoTitle.completed { text-decoration: line-through; color: #9ca3af; }
+.editTodoInput { font-size: 0.875rem; color: #374151; border: none; outline: none; background: transparent; border-bottom: 1px solid #3b82f6; padding: 0; margin: 0; min-width: 150px; }
+.editIcon { width: 0.75rem; height: 0.75rem; color: #9ca3af; opacity: 0; transition: opacity 0.2s; flex-shrink: 0; margin-top: 0.125rem; }
+.todoControls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; }
+.todoProgress { flex-shrink: 0; height: 20px; display: flex; align-items: center; }
+.todoActions { display: flex; gap: 0.5rem; opacity: 1; flex-wrap: wrap; }
+.todoActionBtn { display: flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 500; border: 1px solid transparent; background-color: transparent; color: #6b7280; white-space: nowrap; }
+.todoActionBtn:hover { background-color: white; border-color: #d1d5db; }
+.emptyTodos { padding: 2rem 1rem; text-align: center; color: #6b7280; font-size: 0.875rem; }
+
+/* 할일 입력 행 및 날짜 선택 */
+.todoInputRow { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem; }
+.todoDatePicker { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; min-width: 120px; }
+
+/* 할일 제목 및 날짜 행 */
+.todoTitleRow { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; }
+.todoDateSection { display: flex; align-items: center; flex-shrink: 0; }
+.todoDateDisplay { display: flex; align-items: center; gap: 0.25rem; cursor: pointer; padding: 0.25rem 0.5rem; border-radius: 0.25rem; transition: background-color 0.2s; }
+.todoDateDisplay:hover { background-color: #f3f4f6; }
+.todoDateText { font-size: 0.75rem; color: #4b5563; font-weight: 500; }
+.todoDatePlaceholder { font-size: 0.75rem; color: #9ca3af; }
+.todoDateIcon { width: 0.875rem; height: 0.875rem; color: #6b7280; }
+.todoDatePickerInline { font-size: 0.75rem; padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; min-width: 100px; }
+
+/* 할일 날짜 표시 (기존, 삭제 예정) */
+.todoMeta { display: flex; align-items: center; gap: 0.5rem; }
+.todoDate { font-size: 0.75rem; color: #4b5563; background-color: #e5e7eb; padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
+.todoDateTbd { font-size: 0.75rem; color: #9ca3af; }
+
+.loading, .error { text-align: center; padding: 3rem; font-size: 1.2rem; }
+.loading { color: #6b7280; }
+.error { color: #ef4444; }
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
   .taskMeta {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .taskStatsInfo {
+    align-self: flex-start;
+  }
+  
+  .taskProgressContainer { 
+    width: 200px; 
+  }
+  
+  .todoControls { 
+    flex-direction: column; 
+    gap: 0.75rem; 
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  
+  .todoInputRow {
+    flex-direction: column;
+    align-items: stretch;
     gap: 0.5rem;
   }
-
-  .todoActions {
-    gap: 0.25rem;
+  
+  .todoActions { 
+    width: 100%; 
+    justify-content: flex-start; 
   }
+  
+  .todoProgress { 
+    width: 100%; 
+  }
+}
 
+@media (max-width: 480px) {
   .todoActionBtn {
-    font-size: 0.625rem;
-    padding: 0.25rem;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
   }
-
-  .todoActionBtn span {
-    display: none;
+  
+  .taskProgressContainer { 
+    width: 180px; 
   }
 }

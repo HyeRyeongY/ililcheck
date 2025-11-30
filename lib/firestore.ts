@@ -13,10 +13,11 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Task, TaskGroup, Project } from './types';
+import { Task, TaskGroup, Project, Todo } from './types';
 
 // 컬렉션 이름
 const TASKS_COLLECTION = 'tasks';
+const TODOS_COLLECTION = 'todos';
 const TASK_GROUPS_COLLECTION = 'taskGroups';
 const PROJECTS_COLLECTION = 'projects';
 
@@ -28,8 +29,7 @@ export async function fetchTasks(userId: string): Promise<Task[]> {
     const tasksRef = collection(db, TASKS_COLLECTION);
     const q = query(
       tasksRef,
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', userId)
     );
     const snapshot = await getDocs(q);
 
@@ -42,10 +42,13 @@ export async function fetchTasks(userId: string): Promise<Task[]> {
         progress: data.progress,
         dueDate: data.dueDate,
         projectId: data.projectId,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        todos: [], // 여기서는 할일을 포함하지 않음
       };
     });
 
-    return tasks;
+    // 클라이언트 측에서 정렬 (createdAt 기준 내림차순)
+    return tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } catch (error) {
     console.error('작업 조회 실패:', error);
     return [];
@@ -53,7 +56,7 @@ export async function fetchTasks(userId: string): Promise<Task[]> {
 }
 
 /**
- * 사용자의 특정 프로젝트 작업 가져오기
+ * 사용자의 특정 프로젝트 작업 가져오기 (할일 포함)
  */
 export async function fetchTasksByProject(userId: string, projectId: string): Promise<Task[]> {
   try {
@@ -61,24 +64,32 @@ export async function fetchTasksByProject(userId: string, projectId: string): Pr
     const q = query(
       tasksRef,
       where('userId', '==', userId),
-      where('projectId', '==', projectId),
-      orderBy('createdAt', 'desc')
+      where('projectId', '==', projectId)
     );
     const snapshot = await getDocs(q);
 
-    const tasks: Task[] = snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        title: data.title,
-        status: data.status,
-        progress: data.progress,
-        dueDate: data.dueDate,
-        projectId: data.projectId,
-      };
-    });
+    const tasks: Task[] = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const data = doc.data();
 
-    return tasks;
+        // 해당 작업의 할일들 가져오기
+        const todos = await fetchTodosByTask(doc.id, userId);
+
+        return {
+          id: doc.id,
+          projectId: data.projectId,
+          title: data.title,
+          status: data.status,
+          progress: data.progress,
+          dueDate: data.dueDate,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          todos: todos,
+        };
+      })
+    );
+
+    // 클라이언트 측에서 정렬 (createdAt 기준 내림차순)
+    return tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } catch (error) {
     console.error('프로젝트 작업 조회 실패:', error);
     return [];
@@ -331,5 +342,153 @@ export async function updateProject(
   } catch (error) {
     console.error('프로젝트 업데이트 실패:', error);
     return false;
+  }
+}
+
+/**
+ * 특정 작업의 할일들 가져오기
+ */
+export async function fetchTodosByTask(taskId: string, userId: string): Promise<Todo[]> {
+  try {
+    const todosRef = collection(db, TODOS_COLLECTION);
+    const q = query(
+      todosRef,
+      where('taskId', '==', taskId),
+      where('userId', '==', userId)
+    );
+    const snapshot = await getDocs(q);
+
+    const todos: Todo[] = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        taskId: data.taskId,
+        title: data.title,
+        status: data.status,
+        progress: data.progress,
+        dueDate: data.dueDate,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+      };
+    });
+
+    // 클라이언트 측에서 정렬 (createdAt 기준 내림차순)
+    return todos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } catch (error) {
+    console.error('할일 조회 실패:', error);
+    return [];
+  }
+}
+
+/**
+ * 새 할일 생성
+ */
+export async function createTodoInFirestore(userId: string, todo: Omit<Todo, 'id'>): Promise<string | null> {
+  try {
+    const todosRef = collection(db, TODOS_COLLECTION);
+    
+    // undefined 값 제거
+    const cleanTodo = { ...todo };
+    if (cleanTodo.dueDate === undefined) {
+      delete cleanTodo.dueDate;
+    }
+    
+    const docRef = await addDoc(todosRef, {
+      ...cleanTodo,
+      userId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    return docRef.id;
+  } catch (error) {
+    console.error('할일 생성 실패:', error);
+    return null;
+  }
+}
+
+/**
+ * 할일 업데이트
+ */
+export async function updateTodoInFirestore(todoId: string, updates: Partial<Todo>): Promise<boolean> {
+  try {
+    const todoRef = doc(db, TODOS_COLLECTION, todoId);
+    
+    // undefined 값 제거
+    const cleanUpdates = { ...updates };
+    if (cleanUpdates.dueDate === undefined) {
+      delete cleanUpdates.dueDate;
+    }
+    
+    await updateDoc(todoRef, {
+      ...cleanUpdates,
+      updatedAt: serverTimestamp(),
+    });
+
+    return true;
+  } catch (error) {
+    console.error('할일 업데이트 실패:', error);
+    return false;
+  }
+}
+
+/**
+ * 할일 삭제
+ */
+export async function deleteTodoFromFirestore(todoId: string): Promise<boolean> {
+  try {
+    const todoRef = doc(db, TODOS_COLLECTION, todoId);
+    await deleteDoc(todoRef);
+
+    return true;
+  } catch (error) {
+    console.error('할일 삭제 실패:', error);
+    return false;
+  }
+}
+
+/**
+ * 사용자의 모든 할일 가져오기 (날짜별 필터링 가능)
+ */
+export async function fetchTodosByUser(userId: string, date?: string): Promise<Todo[]> {
+  try {
+    const todosRef = collection(db, TODOS_COLLECTION);
+    let q;
+
+    // 특정 날짜 필터링
+    if (date) {
+      q = query(
+        todosRef,
+        where('userId', '==', userId),
+        where('dueDate', '==', date)
+      );
+    } else {
+      q = query(
+        todosRef,
+        where('userId', '==', userId)
+      );
+    }
+
+    const snapshot = await getDocs(q);
+
+    const todos: Todo[] = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        taskId: data.taskId,
+        title: data.title,
+        status: data.status,
+        progress: data.progress,
+        dueDate: data.dueDate,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+      };
+    });
+
+    // 클라이언트 측에서 정렬 (createdAt 기준 내림차순)
+    return todos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } catch (error) {
+    console.error('사용자 할일 조회 실패:', error);
+    return [];
   }
 }

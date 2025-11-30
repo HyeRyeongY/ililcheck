@@ -11,6 +11,11 @@ import {
   updateProject as updateProjectInFirestore,
   fetchTaskGroups as fetchTaskGroupsFromFirestore,
   createTaskGroup as createTaskGroupInFirestore,
+  createTodoInFirestore,
+  updateTodoInFirestore,
+  deleteTodoFromFirestore,
+  fetchTodosByUser,
+  fetchTodosByTask,
 } from './firestore';
 import { auth } from './firebase';
 
@@ -113,25 +118,37 @@ export async function createTaskGroup(group: Omit<TaskGroup, 'id' | 'tasks'>): P
  * 새 할일 생성
  */
 export async function createTodo(todo: Omit<Todo, 'id'>): Promise<string | null> {
-  // TODO: Firestore에서 할일 생성 함수 구현 필요
-  console.log('Creating todo:', todo);
-  return null;
+  const userId = getCurrentUserId();
+  return await createTodoInFirestore(userId, todo);
 }
 
 /**
  * 할일 업데이트
  */
 export async function updateTodo(todoId: string, updates: Partial<Todo>): Promise<boolean> {
-  // TODO: Firestore에서 할일 업데이트 함수 구현 필요
-  console.log('Updating todo:', todoId, updates);
-  return false;
+  return await updateTodoInFirestore(todoId, updates);
 }
 
 /**
  * 할일 삭제
  */
 export async function deleteTodo(todoId: string): Promise<boolean> {
-  // TODO: Firestore에서 할일 삭제 함수 구현 필요
-  console.log('Deleting todo:', todoId);
-  return false;
+  return await deleteTodoFromFirestore(todoId);
+}
+
+/**
+ * 사용자의 오늘 할일 가져오기
+ */
+export async function fetchTodayTodos(): Promise<Todo[]> {
+  const userId = getCurrentUserId();
+  const today = new Date().toISOString().split('T')[0];
+  return await fetchTodosByUser(userId, today);
+}
+
+/**
+ * 사용자의 모든 할일 가져오기 (보류 포함)
+ */
+export async function fetchAllTodos(): Promise<Todo[]> {
+  const userId = getCurrentUserId();
+  return await fetchTodosByUser(userId);
 }

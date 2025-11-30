@@ -6,10 +6,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { Home, Calendar, FileText, Plus, LogOut, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCategory } from "@/contexts/CategoryContext";
 import { logout } from "@/lib/auth";
 import { fetchProjects } from "@/lib/api";
 import { checkAdminStatus } from "@/lib/admin";
-import type { Project, ProjectCategory, Task } from "@/lib/types";
+import type { Project, ProjectCategory } from "@/lib/types";
 import CreateProjectModal from "@/components/modals/CreateProjectModal";
 import styles from "./Sidebar.module.css";
 
@@ -23,48 +24,11 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
+  const { currentCategory, setCurrentCategory } = useCategory();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState<ProjectCategory>("personal");
-  const [projectsWithLocalProgress, setProjectsWithLocalProgress] = useState<Project[]>([]);
-
-  const calculateProjectProgressFromLocal = (projectId: string): { progress: number; completedTasks: number; totalTasks: number } => {
-    try {
-      const savedTasks = localStorage.getItem(`project_tasks_${projectId}`);
-      if (!savedTasks) return { progress: 0, completedTasks: 0, totalTasks: 0 };
-
-      const tasks: Task[] = JSON.parse(savedTasks);
-      if (tasks.length === 0) return { progress: 0, completedTasks: 0, totalTasks: 0 };
-
-      const totalTasks = tasks.length;
-      const completedTasks = tasks.filter(t => t.progress === 100).length;
-
-      // 작업 진행률의 평균 계산
-      const totalProgress = tasks.reduce((sum, task) => sum + task.progress, 0);
-      const progress = Math.round(totalProgress / totalTasks);
-      
-      return { progress, completedTasks, totalTasks };
-    } catch (error) {
-      console.error("로컬 진행률 계산 실패:", error);
-      return { progress: 0, completedTasks: 0, totalTasks: 0 };
-    }
-  };
-
-  // 프로젝트들에 로컬 진행률 적용
-  const updateProjectsWithLocalProgress = (projectList: Project[]) => {
-    const updatedProjects = projectList.map((project) => {
-      const { progress, completedTasks, totalTasks } = calculateProjectProgressFromLocal(project.id);
-      return {
-        ...project,
-        progress,
-        completedTasks,
-        totalTasks,
-      };
-    });
-    setProjectsWithLocalProgress(updatedProjects);
-  };
 
   const loadProjects = async () => {
     if (!user) {
@@ -79,16 +43,12 @@ export default function Sidebar() {
       const userProjects = await fetchProjects();
       setProjects(userProjects);
 
-      // 로컬 진행률 적용
-      updateProjectsWithLocalProgress(userProjects);
-
       // 관리자 권한 확인
       const adminStatus = await checkAdminStatus(user.uid);
       setIsAdmin(adminStatus);
     } catch (error) {
       console.error("프로젝트 로드 실패:", error);
       setProjects([]);
-      setProjectsWithLocalProgress([]);
     } finally {
       setLoading(false);
     }
@@ -98,54 +58,54 @@ export default function Sidebar() {
     loadProjects();
   }, [user]);
 
+  // 윈도우 포커스 시 프로젝트 목록 새로고침
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user) {
+        loadProjects();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [user]);
+
   // URL 기반으로 현재 카테고리 초기화
   useEffect(() => {
     if (pathname.startsWith('/dashboard/projects/')) {
       // 현재 프로젝트 ID 추출
       const projectId = pathname.split('/').pop();
-      if (projectId && projectsWithLocalProgress.length > 0) {
-        const currentProject = projectsWithLocalProgress.find(p => p.id === projectId);
+      if (projectId && projects.length > 0) {
+        const currentProject = projects.find(p => p.id === projectId);
         if (currentProject) {
           setCurrentCategory(currentProject.category || 'personal');
         }
       }
     }
-  }, [pathname, projectsWithLocalProgress]);
-
-  // 로컬 스토리지 변경 감지를 위한 useEffect (다른 탭에서의 변경)
-  useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      // `project_tasks_`로 시작하는 키가 변경되었을 때만 실행
-      if (event.key?.startsWith("project_tasks_")) {
-        console.log("로컬 스토리지 변경 감지:", event.key);
-        updateProjectsWithLocalProgress(projects);
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, [projects]);
+  }, [pathname, projects]);
 
   // 프로젝트 업데이트 이벤트 감지
   useEffect(() => {
-    const handleProjectUpdate = (event: CustomEvent) => {
+    const handleProjectUpdate = async (event: CustomEvent) => {
       const { projectId, updates } = event.detail;
       console.log("프로젝트 업데이트 감지:", { projectId, updates });
 
-      // 프로젝트 목록에서 해당 프로젝트 업데이트
-      setProjects((prevProjects) => {
-        const updatedProjects = prevProjects.map((project) =>
-          project.id === projectId ? { ...project, ...updates } : project
+      // Firebase에서 최신 프로젝트 목록 다시 가져오기
+      try {
+        const userProjects = await fetchProjects();
+        setProjects(userProjects);
+      } catch (error) {
+        console.error("프로젝트 목록 새로고침 실패:", error);
+        // 실패 시 로컬 state만 업데이트
+        setProjects((prevProjects) =>
+          prevProjects.map((project) =>
+            project.id === projectId ? { ...project, ...updates } : project
+          )
         );
-
-        // 로컬 진행률도 함께 업데이트
-        updateProjectsWithLocalProgress(updatedProjects);
-
-        return updatedProjects;
-      });
+      }
     };
 
     window.addEventListener("projectUpdated", handleProjectUpdate as EventListener);
@@ -161,29 +121,33 @@ export default function Sidebar() {
 
   const handleProjectCreated = (newProject: Project) => {
     // 프로젝트 목록 상태를 직접 업데이트
-    const updatedProjects = [...projects, newProject];
-    setProjects(updatedProjects);
-    updateProjectsWithLocalProgress(updatedProjects);
-    
+    setProjects([...projects, newProject]);
+
     // 생성된 프로젝트 페이지로 이동
     router.push(`/dashboard/projects/${newProject.id}`);
   };
 
-  // 탭 전환 시 첫 번째 프로젝트로 자동 이동
+  // 탭 전환 시 동작 처리
   const handleCategoryChange = (category: ProjectCategory) => {
     setCurrentCategory(category);
 
-    // 해당 카테고리의 첫 번째 프로젝트로 이동
-    const categoryProjects = projectsWithLocalProgress.filter(
-      (project) => (project.category || "personal") === category
-    );
+    // 현재 프로젝트 페이지에 있는지 확인
+    const isOnProjectPage = pathname.startsWith('/dashboard/projects/');
 
-    if (categoryProjects.length > 0) {
-      router.push(`/dashboard/projects/${categoryProjects[0].id}`);
-    } else {
-      // 프로젝트가 없으면 대시보드로 이동
-      router.push("/dashboard");
+    // 프로젝트 페이지에 있는 경우에만 해당 카테고리의 첫 번째 프로젝트로 이동
+    if (isOnProjectPage) {
+      const categoryProjects = projects.filter(
+        (project) => (project.category || "personal") === category
+      );
+
+      if (categoryProjects.length > 0) {
+        router.push(`/dashboard/projects/${categoryProjects[0].id}`);
+      } else {
+        // 프로젝트가 없으면 대시보드로 이동
+        router.push("/dashboard");
+      }
     }
+    // 다른 페이지(오늘의 할일, 달력, 보고서)에 있으면 현재 페이지 유지하면서 카테고리만 변경
   };
 
   return (
@@ -247,7 +211,7 @@ export default function Sidebar() {
           </button>
         </div>
         <div className={styles.projectsList}>
-          {projectsWithLocalProgress
+          {projects
             .filter((project) => (project.category || "personal") === currentCategory)
             .map((project) => {
               const isCurrentProject = pathname === `/dashboard/projects/${project.id}`;
@@ -273,7 +237,7 @@ export default function Sidebar() {
                       <span className={styles.taskCount}>
                         {project.completedTasks ?? 0}/{project.totalTasks ?? 0}
                       </span>
-                      <span className={styles.projectProgress}>{project.progress}%</span>
+                      <span className={styles.projectProgress}>{project.progress ?? 0}%</span>
                     </div>
                     {/* 진행률 바 */}
                     <div className={styles.progressBarContainer}>
@@ -281,7 +245,7 @@ export default function Sidebar() {
                         className={styles.progressBar}
                         style={{
                           backgroundColor: project.color,
-                          width: `${project.progress}%`,
+                          width: `${project.progress ?? 0}%`,
                         }}
                       />
                     </div>

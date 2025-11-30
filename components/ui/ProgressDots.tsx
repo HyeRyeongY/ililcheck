@@ -86,7 +86,7 @@ export default function ProgressDots({
           );
         })}
       </div>
-      <div className={styles.progressText}>
+      <div className={styles.percentageText}>
         {hoveredIndex !== null && !disabled ? previewProgress : progress}%
       </div>
     </div>

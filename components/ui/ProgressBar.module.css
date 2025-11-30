@@ -33,10 +33,11 @@
   transition: width 0.3s;
 }
 
-.label {
+.percentageText {
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
   min-width: 3rem;
   text-align: right;
+  line-height: 1.5; /* Ensure proper vertical alignment */
 }

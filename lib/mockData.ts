@@ -4,7 +4,7 @@ export const mockProjects: Project[] = [
   {
     id: '1',
     name: 'Q4 Marketing Campaign',
-    color: '#3b82f6',
+    color: '#4ECDC4',
     description: 'Q4 마케팅 캠페인',
     startDate: '11월 12일',
     endDate: '12월 3일',
@@ -14,7 +14,7 @@ export const mockProjects: Project[] = [
   {
     id: '2',
     name: 'Website Redesign',
-    color: '#8b5cf6',
+    color: '#BB8FCE',
     description: '웹사이트 리디자인',
     startDate: '10월 27일',
     endDate: '12월 10일',
@@ -24,7 +24,7 @@ export const mockProjects: Project[] = [
   {
     id: '3',
     name: 'Mobile App Development',
-    color: '#ef4444',
+    color: '#FF6B6B',
     description: '모바일 앱 개발',
     startDate: '11월 26일',
     endDate: '1월 25일',

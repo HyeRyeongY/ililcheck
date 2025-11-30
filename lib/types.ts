@@ -40,6 +40,8 @@ export interface Todo {
   dueDate?: string;
   createdAt: string;
   updatedAt: string;
+  startDate?: string;
+  completedDate?: string;
 }
 
 export interface DailyReport {

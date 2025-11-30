@@ -66,23 +66,24 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
-/* 진행률 텍스트 */
-.progressText {
-  font-size: 0.75rem;
-  font-weight: 600;
+/* 공통 진행률 텍스트 스타일 */
+.percentageText {
+  font-size: 0.875rem; /* Default for md */
+  font-weight: 500; /* Consistent with ProgressBar's label */
   color: #374151;
-  min-width: 2.5rem;
+  min-width: 3rem; /* Adjusted for better alignment */
   text-align: right;
+  line-height: 1.5; /* Ensure proper vertical alignment */
 }
 
-.sm .progressText {
-  font-size: 0.625rem;
-  min-width: 2rem;
+.sm .percentageText {
+  font-size: 0.75rem;
+  min-width: 2.5rem;
 }
 
-.lg .progressText {
-  font-size: 0.875rem;
-  min-width: 3rem;
+.lg .percentageText {
+  font-size: 1rem;
+  min-width: 3.5rem;
 }
 
 /* 애니메이션 */

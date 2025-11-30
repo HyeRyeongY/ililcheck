@@ -32,7 +32,7 @@ export default function ConfirmDialog({
       if (event.key === 'Enter') {
         event.preventDefault();
         onConfirm();
-      } else if (event.key === 'Escape') {
+      } else if (event.key === 'Escape' && cancelText) {
         event.preventDefault();
         onCancel();
       }
@@ -75,12 +75,14 @@ export default function ConfirmDialog({
         </div>
         
         <div className={styles.actions}>
-          <button
-            onClick={onCancel}
-            className={styles.cancelButton}
-          >
-            {cancelText}
-          </button>
+          {cancelText && (
+            <button
+              onClick={onCancel}
+              className={styles.cancelButton}
+            >
+              {cancelText}
+            </button>
+          )}
           <button
             onClick={onConfirm}
             className={`${styles.confirmButton} confirm-button`}
@@ -92,7 +94,7 @@ export default function ConfirmDialog({
         
         <div className={styles.keyboardHint}>
           <span>Enter: {confirmText}</span>
-          <span>Esc: {cancelText}</span>
+          {cancelText && <span>Esc: {cancelText}</span>}
         </div>
       </div>
     </div>

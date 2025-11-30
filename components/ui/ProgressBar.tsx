@@ -35,7 +35,7 @@ export default function ProgressBar({
           />
         </div>
         {showLabel && (
-          <span className={styles.label}>
+          <span className={styles.percentageText}>
             {progress}%
           </span>
         )}
