@@ -14,7 +14,7 @@ import {
   updateTask,
   updateTodo,
 } from "@/lib/api";
-import { Project, ProjectCategory, Task } from "@/lib/types";
+import { Project, ProjectCategory, Task, Todo } from "@/lib/types";
 import { ko } from "date-fns/locale/ko";
 import {
   Check,
