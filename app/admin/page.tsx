@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { onAuthChange } from '@/lib/auth';
 import {
-  fetchAllUsers,
   checkAdminStatus,
+  fetchAllUsers,
   getUserRole,
   grantManagerRole,
   revokeAdminRole,
   type UserRole
 } from '@/lib/admin';
+import { onAuthChange } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import styles from './page.module.css';
 
 interface UserInfo {

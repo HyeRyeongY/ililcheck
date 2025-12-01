@@ -156,3 +156,11 @@ body {
   border-top-right-radius: 50% !important;
   border-bottom-right-radius: 50% !important;
 }
+
+
+@font-face {
+    font-family: 'Aggravo';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroL.woff') format('woff');
+    font-weight: 300, 500, 700;
+    font-display: swap;
+}

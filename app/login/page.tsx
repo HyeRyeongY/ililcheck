@@ -1,16 +1,26 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import DotBackground from '@/components/p5/DotBackground';
 import { signInWithEmail, signInWithGoogle } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import styles from './page.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,10 +29,16 @@ export default function LoginPage() {
 
     const { user, error } = await signInWithEmail(email, password);
 
+    setLoading(false);
     if (error) {
       setError('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
-      setLoading(false);
       return;
+    }
+
+    if (rememberMe) {
+      localStorage.setItem('rememberedEmail', email);
+    } else {
+      localStorage.removeItem('rememberedEmail');
     }
 
     router.push('/dashboard/today');
@@ -34,20 +50,25 @@ export default function LoginPage() {
 
     const { user, error } = await signInWithGoogle();
 
+    setLoading(false);
     if (error) {
       setError('Google 로그인에 실패했습니다.');
-      setLoading(false);
       return;
     }
 
     router.push('/dashboard/today');
   };
 
+  
+
   return (
     <div className={styles.container}>
+      <div className={styles.background}>
+        <DotBackground />
+      </div>
       <div className={styles.card}>
-        <h1 className={styles.title}>일일 업무 관리</h1>
-        <p className={styles.subtitle}>로그인하여 시작하세요</p>
+        <h1 className={styles.title}>ililcheck</h1>
+        <p className={styles.subtitle}>일일 업무 체킹 시스템</p>
 
         {error && (
           <div className={styles.error}>
@@ -78,6 +99,19 @@ export default function LoginPage() {
               placeholder="••••••••"
               required
             />
+          </div>
+
+          <div className={styles.rememberMe}>
+            <input
+              type="checkbox"
+              id="rememberMe"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className={styles.checkbox}
+            />
+            <label htmlFor="rememberMe" className={styles.checkboxLabel}>
+              아이디 저장
+            </label>
           </div>
 
           <button

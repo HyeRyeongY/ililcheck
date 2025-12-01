@@ -1,7 +1,7 @@
 .container {
   min-height: 100vh;
   padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #f9fafb;
 }
 
 .header {
@@ -10,15 +10,15 @@
 }
 
 .title {
-  font-size: 2.5rem;
-  color: white;
+  font-size: 1.5rem;
+  color: #3b82f6;
   margin-bottom: 0.5rem;
   font-weight: 700;
 }
 
 .subtitle {
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: #1f2937;
 }
 
 .stats {
@@ -68,14 +68,14 @@
 }
 
 .table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #e5e7eb;
 }
 
 .table th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: white;
+  color: #1f2937;
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -193,7 +193,7 @@
 }
 
 .btnGrant {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #3b82f6;
   color: white;
 }
 

@@ -22,6 +22,9 @@ const config: Config = {
           900: '#1e3a8a',
         },
       },
+      fontFamily: {
+        sans: ['Aggravo', 'sans-serif'],
+      },
     },
   },
   plugins: [],

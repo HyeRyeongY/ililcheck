@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={styles.body}>
+      <body className={`${styles.body} font-sans`}>
         <AuthProvider>
           {children}
         </AuthProvider>
