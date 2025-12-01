@@ -65,7 +65,17 @@ export default function TaskItem({ task, onStatusChange, onDelete, onProgressCha
                 </button>
 
                 <div className={styles.taskContent}>
-                    <p className={`${styles.title} ${isCompleted ? styles.completed : ""}`}>{task.title}</p>
+                    <div className={styles.titleContainer}>
+                        <p className={`${styles.title} ${isCompleted ? styles.completed : ""}`}>{task.title}</p>
+                        <div className={styles.dateInfo}>
+                            <span className={styles.dateLabel}>
+                                시작: {task.startDate ? new Date(task.startDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : '-'}
+                            </span>
+                            <span className={styles.dateLabel}>
+                                완료: {task.completedDate ? new Date(task.completedDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : '-'}
+                            </span>
+                        </div>
+                    </div>
 
                     {/* 진행률 블록 (이미지 참고 디자인) */}
                     <div className={styles.progressSection}>

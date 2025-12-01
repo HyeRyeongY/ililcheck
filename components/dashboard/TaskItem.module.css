@@ -47,15 +47,36 @@
   min-width: 0;
 }
 
+.titleContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
 .title {
   font-size: 0.875rem;
-  margin-bottom: 0.5rem;
   color: #111827;
+  margin: 0;
 }
 
 .title.completed {
   text-decoration: line-through;
   color: #6b7280;
+}
+
+.dateInfo {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.dateLabel {
+  font-size: 0.7rem;
+  color: #6b7280;
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
 }
 
 .progressSection {

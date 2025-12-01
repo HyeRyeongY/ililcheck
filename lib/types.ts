@@ -28,6 +28,8 @@ export interface Task {
   progress: number;
   dueDate?: string;
   createdAt: string;
+  startDate?: string;
+  completedDate?: string;
   todos: Todo[];
 }
 

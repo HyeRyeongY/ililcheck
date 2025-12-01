@@ -43,6 +43,8 @@ export async function fetchTasks(userId: string): Promise<Task[]> {
         dueDate: data.dueDate,
         projectId: data.projectId,
         createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        startDate: data.startDate,
+        completedDate: data.completedDate,
         todos: [], // 여기서는 할일을 포함하지 않음
       };
     });
@@ -83,6 +85,8 @@ export async function fetchTasksByProject(userId: string, projectId: string): Pr
           progress: data.progress,
           dueDate: data.dueDate,
           createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          startDate: data.startDate,
+          completedDate: data.completedDate,
           todos: todos,
         };
       })
@@ -146,22 +150,84 @@ export async function updateTaskProgress(
 ): Promise<boolean> {
   try {
     const taskRef = doc(db, TASKS_COLLECTION, taskId);
+
+    // 현재 작업 데이터 가져오기
+    const taskSnap = await getDoc(taskRef);
+    const currentData = taskSnap.data();
+
+    if (!currentData) {
+      console.error('작업을 찾을 수 없습니다.');
+      return false;
+    }
+
+    const projectId = currentData.projectId;
+    const userId = currentData.userId;
+    const progressChanged = progress !== currentData.progress;
+
     const updates: any = {
       progress: Math.min(100, Math.max(0, progress)),
       updatedAt: serverTimestamp(),
     };
 
-    // 진행률이 100%면 자동으로 완료 상태로 변경
+    // 0에서 진행률이 생기면 시작일 기록 (처음 시작할 때만)
+    if (currentData && currentData.progress === 0 && progress > 0 && !currentData.startDate) {
+      updates.startDate = new Date().toISOString();
+    }
+
+    // 진행률이 0으로 돌아가면 시작일 초기화
+    if (progress === 0 && currentData?.startDate) {
+      updates.startDate = null;
+    }
+
+    // 진행률이 100%면 자동으로 완료 상태로 변경하고 완료일 기록
     if (progress >= 100) {
       updates.status = 'completed';
+      if (!currentData?.completedDate) {
+        updates.completedDate = new Date().toISOString();
+      }
+    }
+
+    // 진행률이 100 미만으로 변경되면 완료일 초기화
+    if (progress < 100 && currentData?.completedDate) {
+      updates.completedDate = null;
     }
 
     await updateDoc(taskRef, updates);
+
+    // 진행률이 변경되었으면 상위 Project의 진행률도 업데이트
+    if (progressChanged && projectId && userId) {
+      await updateProjectProgressFromTasks(projectId, userId);
+    }
 
     return true;
   } catch (error) {
     console.error('작업 진행률 업데이트 실패:', error);
     return false;
+  }
+}
+
+/**
+ * Project의 Tasks 진행률을 기반으로 Project 진행률 자동 업데이트
+ */
+async function updateProjectProgressFromTasks(projectId: string, userId: string): Promise<void> {
+  try {
+    // 해당 Project의 모든 Tasks 가져오기
+    const tasks = await fetchTasksByProject(userId, projectId);
+
+    if (tasks.length === 0) {
+      // Task가 없으면 Project 진행률을 0으로 설정
+      await updateProject(projectId, { progress: 0 });
+      return;
+    }
+
+    // 평균 진행률 계산
+    const totalProgress = tasks.reduce((sum, task) => sum + task.progress, 0);
+    const averageProgress = Math.round(totalProgress / tasks.length);
+
+    // Project 진행률 업데이트
+    await updateProject(projectId, { progress: averageProgress });
+  } catch (error) {
+    console.error('Project 진행률 자동 업데이트 실패:', error);
   }
 }
 
@@ -369,6 +435,8 @@ export async function fetchTodosByTask(taskId: string, userId: string): Promise<
         dueDate: data.dueDate,
         createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        startDate: data.startDate,
+        completedDate: data.completedDate,
       };
     });
 
@@ -413,22 +481,87 @@ export async function createTodoInFirestore(userId: string, todo: Omit<Todo, 'id
 export async function updateTodoInFirestore(todoId: string, updates: Partial<Todo>): Promise<boolean> {
   try {
     const todoRef = doc(db, TODOS_COLLECTION, todoId);
-    
+
+    // 현재 할일 데이터 가져오기
+    const todoSnap = await getDoc(todoRef);
+    const currentData = todoSnap.data();
+
+    if (!currentData) {
+      console.error('할일을 찾을 수 없습니다.');
+      return false;
+    }
+
     // undefined 값 제거
     const cleanUpdates = { ...updates };
     if (cleanUpdates.dueDate === undefined) {
       delete cleanUpdates.dueDate;
     }
-    
+
+    const taskId = currentData.taskId;
+    const progressChanged = cleanUpdates.progress !== undefined && cleanUpdates.progress !== currentData.progress;
+
+    // 진행률 변경 감지 및 자동 날짜 기록
+    if (cleanUpdates.progress !== undefined && currentData) {
+      // 0에서 진행률이 생기면 시작일 기록 (처음 시작할 때만)
+      if (currentData.progress === 0 && cleanUpdates.progress > 0 && !currentData.startDate) {
+        cleanUpdates.startDate = new Date().toISOString();
+      }
+
+      // 진행률이 0으로 돌아가면 시작일 초기화
+      if (cleanUpdates.progress === 0 && currentData.startDate) {
+        cleanUpdates.startDate = null;
+      }
+
+      // 진행률이 100%면 완료일 기록
+      if (cleanUpdates.progress >= 100 && !currentData.completedDate) {
+        cleanUpdates.completedDate = new Date().toISOString();
+      }
+
+      // 진행률이 100 미만으로 변경되면 완료일 초기화
+      if (cleanUpdates.progress < 100 && currentData.completedDate) {
+        cleanUpdates.completedDate = null;
+      }
+    }
+
     await updateDoc(todoRef, {
       ...cleanUpdates,
       updatedAt: serverTimestamp(),
     });
 
+    // 진행률이 변경되었으면 상위 Task의 진행률도 업데이트
+    if (progressChanged && taskId) {
+      await updateTaskProgressFromTodos(taskId, currentData.userId);
+    }
+
     return true;
   } catch (error) {
     console.error('할일 업데이트 실패:', error);
     return false;
+  }
+}
+
+/**
+ * Task의 Todos 진행률을 기반으로 Task 진행률 자동 업데이트
+ */
+async function updateTaskProgressFromTodos(taskId: string, userId: string): Promise<void> {
+  try {
+    // 해당 Task의 모든 Todos 가져오기
+    const todos = await fetchTodosByTask(taskId, userId);
+
+    if (todos.length === 0) {
+      // Todo가 없으면 Task 진행률을 0으로 설정
+      await updateTaskProgress(taskId, 0);
+      return;
+    }
+
+    // 평균 진행률 계산
+    const totalProgress = todos.reduce((sum, todo) => sum + todo.progress, 0);
+    const averageProgress = Math.round(totalProgress / todos.length);
+
+    // Task 진행률 업데이트
+    await updateTaskProgress(taskId, averageProgress);
+  } catch (error) {
+    console.error('Task 진행률 자동 업데이트 실패:', error);
   }
 }
 
@@ -482,6 +615,8 @@ export async function fetchTodosByUser(userId: string, date?: string): Promise<T
         dueDate: data.dueDate,
         createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        startDate: data.startDate,
+        completedDate: data.completedDate,
       };
     });
 
