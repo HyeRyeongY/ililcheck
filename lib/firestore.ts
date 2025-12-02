@@ -176,7 +176,7 @@ export async function updateTaskProgress(
 
     // 진행률이 0으로 돌아가면 시작일 초기화
     if (progress === 0 && currentData?.startDate) {
-      updates.startDate = null;
+      updates.startDate = undefined;
     }
 
     // 진행률이 100%면 자동으로 완료 상태로 변경하고 완료일 기록
@@ -189,7 +189,7 @@ export async function updateTaskProgress(
 
     // 진행률이 100 미만으로 변경되면 완료일 초기화
     if (progress < 100 && currentData?.completedDate) {
-      updates.completedDate = null;
+      updates.completedDate = undefined;
     }
 
     await updateDoc(taskRef, updates);
@@ -509,7 +509,7 @@ export async function updateTodoInFirestore(todoId: string, updates: Partial<Tod
 
       // 진행률이 0으로 돌아가면 시작일 초기화
       if (cleanUpdates.progress === 0 && currentData.startDate) {
-        cleanUpdates.startDate = null;
+        cleanUpdates.startDate = undefined;
       }
 
       // 진행률이 100%면 완료일 기록
@@ -519,7 +519,7 @@ export async function updateTodoInFirestore(todoId: string, updates: Partial<Tod
 
       // 진행률이 100 미만으로 변경되면 완료일 초기화
       if (cleanUpdates.progress < 100 && currentData.completedDate) {
-        cleanUpdates.completedDate = null;
+        cleanUpdates.completedDate = undefined;
       }
     }
 

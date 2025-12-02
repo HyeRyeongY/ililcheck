@@ -73,7 +73,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, default
         startDate: formData.startDate,
         endDate: formData.endDate,
         progress: 0,
-        daysRemaining: Math.max(0, daysRemaining)
+        daysRemaining: Math.max(0, daysRemaining),
+        category: formData.category
       };
 
       const newProject = await createProject(projectData);
@@ -97,6 +98,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, default
       name: '',
       description: '',
       startDate: '',
+      category: defaultCategory,
       endDate: '',
       color: PRESET_COLORS[0]
     });

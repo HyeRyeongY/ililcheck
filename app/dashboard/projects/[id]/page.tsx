@@ -725,7 +725,7 @@ export default function ProjectDetailPage() {
       ? new Date(
           newDate.getTime() - newDate.getTimezoneOffset() * 60000
         ).toISOString()
-      : null;
+      : undefined;
 
     try {
       // Firebase에 할일 시작일 업데이트

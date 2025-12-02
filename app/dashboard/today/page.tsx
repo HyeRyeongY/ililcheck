@@ -297,7 +297,7 @@ export default function TodayPage() {
       ? new Date(
           newDate.getTime() - newDate.getTimezoneOffset() * 60000
         ).toISOString()
-      : null;
+      : undefined;
 
     await updateTodoHandler(todoId, {
       startDate: dateString,
@@ -317,7 +317,7 @@ export default function TodayPage() {
       ? new Date(
           newDate.getTime() - newDate.getTimezoneOffset() * 60000
         ).toISOString()
-      : null;
+      : undefined;
 
     await updateTodoHandler(todoId, {
       completedDate: dateString,
