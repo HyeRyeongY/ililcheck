@@ -657,7 +657,7 @@ export default function ProjectDetailPage() {
     }
 
     // 상태 업데이트
-    const newStatus =
+    const newStatus: Task['status'] =
       newProgress === 100
         ? "completed"
         : newProgress > 0
