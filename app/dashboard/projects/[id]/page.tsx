@@ -1141,9 +1141,10 @@ export default function ProjectDetailPage() {
                     className={`${styles.taskHeader} ${styles.taskHeaderClickable}`}
                     onClick={e => {
                       // 버튼 클릭이 아닌 경우에만 작업 확장/축소
+                      const target = e.target as HTMLElement;
                       if (
-                        !e.target.closest("button") &&
-                        !e.target.closest("input")
+                        !target.closest("button") &&
+                        !target.closest("input")
                       ) {
                         toggleTaskExpansion(task.id);
                       }
