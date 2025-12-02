@@ -54,9 +54,9 @@ export default function ProjectDetailCard({
         title: newTaskTitle,
         status: 'todo',
         progress: 0,
-        userId: '',
-        groupId: groupId,
         projectId: project.id,
+        createdAt: new Date().toISOString(),
+        todos: [],
       });
 
       setNewTaskTitle('');

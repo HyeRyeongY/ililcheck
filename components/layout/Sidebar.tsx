@@ -89,8 +89,9 @@ export default function Sidebar() {
 
   // 프로젝트 업데이트 이벤트 감지
   useEffect(() => {
-    const handleProjectUpdate = async (event: CustomEvent) => {
-      const { projectId, updates } = event.detail;
+    const handleProjectUpdate = async (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { projectId, updates } = customEvent.detail;
       console.log("프로젝트 업데이트 감지:", { projectId, updates });
 
       // Firebase에서 최신 프로젝트 목록 다시 가져오기
@@ -108,10 +109,10 @@ export default function Sidebar() {
       }
     };
 
-    window.addEventListener("projectUpdated", handleProjectUpdate as EventListener);
+    window.addEventListener("projectUpdated", handleProjectUpdate);
 
     return () => {
-      window.removeEventListener("projectUpdated", handleProjectUpdate as EventListener);
+      window.removeEventListener("projectUpdated", handleProjectUpdate);
     };
   }, []);
 

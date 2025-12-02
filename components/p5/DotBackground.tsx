@@ -4,7 +4,7 @@ import { ReactP5Wrapper, Sketch } from '@p5-wrapper/react';
 
 const sketch: Sketch = (p5) => {
   let dots: Dot[] = [];
-  let beacon: p5.Vector;
+  let beacon: any;
   const CIRCLE_W = 14;
   const ACTUAL_W = CIRCLE_W * 0.68;
   const MIN_W = 0;
@@ -12,7 +12,7 @@ const sketch: Sketch = (p5) => {
   let COLS: number, ROWS: number, GREATER: number;
 
   class Dot {
-    position: p5.Vector;
+    position: any;
 
     constructor(posX: number, posY: number) {
       this.position = p5.createVector(posX, posY);
@@ -66,7 +66,9 @@ const sketch: Sketch = (p5) => {
 
   p5.draw = () => {
     p5.background('#f9fafb');
-    beacon = p5.createVector(p5.mouseX || p5.touchX, p5.mouseY || p5.touchY);
+    const touchX = (p5 as any).touchX || 0;
+    const touchY = (p5 as any).touchY || 0;
+    beacon = p5.createVector(p5.mouseX || touchX, p5.mouseY || touchY);
 
     p5.fill('#8bb7ff');
     dots.forEach((dot) => {
