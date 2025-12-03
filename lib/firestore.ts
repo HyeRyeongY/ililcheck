@@ -247,7 +247,7 @@ export async function deleteTask(taskId: string): Promise<boolean> {
 }
 
 /**
- * 사용자의 모든 작업 그룹 가져오기
+ * 사용자의 모든 작업 그룹 가져오기 (작업 및 할일 포함)
  */
 export async function fetchTaskGroups(userId: string): Promise<TaskGroup[]> {
   try {
@@ -255,14 +255,53 @@ export async function fetchTaskGroups(userId: string): Promise<TaskGroup[]> {
     const q = query(groupsRef, where('userId', '==', userId));
     const snapshot = await getDocs(q);
 
+    // 먼저 모든 작업을 한 번에 가져오기 (성능 최적화)
+    const tasksRef = collection(db, TASKS_COLLECTION);
+    const tasksQuery = query(tasksRef, where('userId', '==', userId));
+    const tasksSnapshot = await getDocs(tasksQuery);
+
+    // 작업을 projectId로 그룹화
+    const tasksByProject: { [projectId: string]: Task[] } = {};
+
+    await Promise.all(
+      tasksSnapshot.docs.map(async (taskDoc) => {
+        const data = taskDoc.data();
+        const projectId = data.projectId;
+
+        // 해당 작업의 할일들 가져오기
+        const todos = await fetchTodosByTask(taskDoc.id, userId);
+
+        const task: Task = {
+          id: taskDoc.id,
+          projectId: data.projectId,
+          title: data.title,
+          status: data.status,
+          progress: data.progress,
+          dueDate: data.dueDate,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          startDate: data.startDate,
+          completedDate: data.completedDate,
+          todos: todos,
+        };
+
+        if (!tasksByProject[projectId]) {
+          tasksByProject[projectId] = [];
+        }
+        tasksByProject[projectId].push(task);
+      })
+    );
+
+    // 각 TaskGroup에 해당하는 작업들 할당
     const groups: TaskGroup[] = snapshot.docs.map((doc) => {
       const data = doc.data();
+      const projectId = data.projectId;
+
       return {
         id: doc.id,
         name: data.name,
-        projectId: data.projectId,
+        projectId: projectId,
         progress: data.progress,
-        tasks: [],
+        tasks: tasksByProject[projectId] || [],
       };
     });
 

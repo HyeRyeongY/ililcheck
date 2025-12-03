@@ -57,6 +57,25 @@ export interface DailyReport {
   notes?: string;
 }
 
+export interface ProjectReport {
+  id: string;
+  name: string;
+  color: string;
+  totalTasks: number;
+  completedTasks: number;
+  totalTodos: number;
+  completedTodos: number;
+  taskProgress: number;
+  todoProgress: number;
+  overallProgress: number;
+  progressHistory: ProgressHistoryPoint[];
+}
+
+export interface ProgressHistoryPoint {
+  date: string;
+  progress: number;
+}
+
 export type TabType = 'today' | 'calendar' | 'reports';
 
 export type ProjectCategory = 'personal' | 'work';

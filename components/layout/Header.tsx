@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Download, FileDown } from 'lucide-react';
 import styles from './Header.module.css';
 
@@ -7,9 +8,23 @@ interface HeaderProps {
   title: string;
   dateRange?: boolean;
   showExport?: boolean;
+  onDateRangeChange?: (startDate: string, endDate: string) => void;
 }
 
-export default function Header({ title, dateRange, showExport = false }: HeaderProps) {
+export default function Header({ title, dateRange, showExport = false, onDateRangeChange }: HeaderProps) {
+  // 오늘 날짜를 기본값으로 설정
+  const today = new Date().toISOString().split('T')[0];
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+
+  // 초기 날짜 범위를 부모 컴포넌트에 전달 (한 번만 실행)
+  useEffect(() => {
+    if (onDateRangeChange) {
+      onDateRangeChange(today, today);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleExportJPG = () => {
     // TODO: JPG 내보내기 구현
     console.log('Export as JPG');
@@ -32,14 +47,26 @@ export default function Header({ title, dateRange, showExport = false }: HeaderP
             <div className={styles.dateRange}>
               <span className={styles.dateRangeLabel}>기간 선택:</span>
               <input
-                type="text"
-                placeholder="시작일"
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  if (onDateRangeChange && endDate) {
+                    onDateRangeChange(e.target.value, endDate);
+                  }
+                }}
                 className={styles.dateInput}
               />
               <span className={styles.dateSeparator}>~</span>
               <input
-                type="text"
-                placeholder="종료일"
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  if (onDateRangeChange && startDate) {
+                    onDateRangeChange(startDate, e.target.value);
+                  }
+                }}
                 className={styles.dateInput}
               />
             </div>
