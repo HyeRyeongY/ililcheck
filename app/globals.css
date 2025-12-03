@@ -24,6 +24,7 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+  font-family: 'Suit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 @layer utilities {
@@ -162,5 +163,12 @@ body {
     font-family: 'Aggravo';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroL.woff') format('woff');
     font-weight: 300, 500, 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Suit';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Thin.woff2') format('woff2');
+    font-weight: 100 900;
     font-display: swap;
 }
