@@ -1,10 +1,14 @@
 "use client";
 
-import DotBackground from "@/components/p5/DotBackground";
 import { signInWithEmail, signInWithGoogle } from "@/lib/auth";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
+
+const DotBackground = dynamic(() => import("@/components/p5/DotBackground"), {
+  ssr: false,
+});
 
 export default function LoginPage() {
   const router = useRouter();
