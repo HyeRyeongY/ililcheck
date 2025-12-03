@@ -23,7 +23,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['Aggravo', 'sans-serif'],
+        sans: ['Suit', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        aggravo: ['Aggravo', 'sans-serif'],
       },
     },
   },
