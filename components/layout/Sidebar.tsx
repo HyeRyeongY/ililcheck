@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Home, Calendar, FileText, Plus, LogOut, Shield } from "lucide-react";
-import { cn } from "@/lib/utils";
+import CreateProjectModal from "@/components/modals/CreateProjectModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategory } from "@/contexts/CategoryContext";
-import { logout } from "@/lib/auth";
-import { fetchProjects } from "@/lib/api";
 import { checkAdminStatus } from "@/lib/admin";
+import { fetchProjects } from "@/lib/api";
+import { logout } from "@/lib/auth";
 import type { Project, ProjectCategory } from "@/lib/types";
-import CreateProjectModal from "@/components/modals/CreateProjectModal";
+import { Calendar, FileText, Home, LogOut, Plus, Shield } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import styles from "./Sidebar.module.css";
 
 const navigation = [
@@ -75,13 +74,13 @@ export default function Sidebar() {
 
   // URL 기반으로 현재 카테고리 초기화
   useEffect(() => {
-    if (pathname.startsWith('/dashboard/projects/')) {
+    if (pathname.startsWith("/dashboard/projects/")) {
       // 현재 프로젝트 ID 추출
-      const projectId = pathname.split('/').pop();
+      const projectId = pathname.split("/").pop();
       if (projectId && projects.length > 0) {
         const currentProject = projects.find(p => p.id === projectId);
         if (currentProject) {
-          setCurrentCategory(currentProject.category || 'personal');
+          setCurrentCategory(currentProject.category || "personal");
         }
       }
     }
@@ -101,8 +100,8 @@ export default function Sidebar() {
       } catch (error) {
         console.error("프로젝트 목록 새로고침 실패:", error);
         // 실패 시 로컬 state만 업데이트
-        setProjects((prevProjects) =>
-          prevProjects.map((project) =>
+        setProjects(prevProjects =>
+          prevProjects.map(project =>
             project.id === projectId ? { ...project, ...updates } : project
           )
         );
@@ -133,12 +132,12 @@ export default function Sidebar() {
     setCurrentCategory(category);
 
     // 현재 프로젝트 페이지에 있는지 확인
-    const isOnProjectPage = pathname.startsWith('/dashboard/projects/');
+    const isOnProjectPage = pathname.startsWith("/dashboard/projects/");
 
     // 프로젝트 페이지에 있는 경우에만 해당 카테고리의 첫 번째 프로젝트로 이동
     if (isOnProjectPage) {
       const categoryProjects = projects.filter(
-        (project) => (project.category || "personal") === category
+        project => (project.category || "personal") === category
       );
 
       if (categoryProjects.length > 0) {
@@ -155,7 +154,7 @@ export default function Sidebar() {
     <div className={styles.container}>
       {/* 헤더 */}
       <div className={styles.header}>
-        <h1 className={styles.headerTitle}>일일 업무 관리</h1>
+        <h1 className={styles.headerTitle}>ililcheck</h1>
       </div>
 
       {/* 탭 */}
@@ -163,7 +162,9 @@ export default function Sidebar() {
         <button
           onClick={() => handleCategoryChange("personal")}
           className={`${styles.tab} ${
-            currentCategory === "personal" ? styles.tabPersonal : styles.tabInactive
+            currentCategory === "personal"
+              ? styles.tabPersonal
+              : styles.tabInactive
           }`}
         >
           <Home className="inline-block w-4 h-4 mr-2" />
@@ -182,7 +183,7 @@ export default function Sidebar() {
 
       {/* 네비게이션 */}
       <nav className={styles.navigation}>
-        {navigation.map((item) => {
+        {navigation.map(item => {
           const isActive = pathname === item.href;
           return (
             <Link
@@ -207,15 +208,21 @@ export default function Sidebar() {
       <div className={styles.projects}>
         <div className={styles.projectsHeader}>
           <h2 className={styles.projectsTitle}>프로젝트</h2>
-          <button className={styles.addButton} onClick={() => setIsModalOpen(true)}>
+          <button
+            className={styles.addButton}
+            onClick={() => setIsModalOpen(true)}
+          >
             <Plus className="h-4 w-4 text-gray-400" />
           </button>
         </div>
         <div className={styles.projectsList}>
           {projects
-            .filter((project) => (project.category || "personal") === currentCategory)
-            .map((project) => {
-              const isCurrentProject = pathname === `/dashboard/projects/${project.id}`;
+            .filter(
+              project => (project.category || "personal") === currentCategory
+            )
+            .map(project => {
+              const isCurrentProject =
+                pathname === `/dashboard/projects/${project.id}`;
               return (
                 <Link
                   key={project.id}
@@ -238,7 +245,9 @@ export default function Sidebar() {
                       <span className={styles.taskCount}>
                         {project.completedTasks ?? 0}/{project.totalTasks ?? 0}
                       </span>
-                      <span className={styles.projectProgress}>{project.progress ?? 0}%</span>
+                      <span className={styles.projectProgress}>
+                        {project.progress ?? 0}%
+                      </span>
                     </div>
                     {/* 진행률 바 */}
                     <div className={styles.progressBarContainer}>
@@ -254,7 +263,9 @@ export default function Sidebar() {
                       <p className={styles.projectDates}>
                         {project.startDate} ~ {project.endDate}
                       </p>
-                      <p className={styles.projectDaysRemaining}>D-{project.daysRemaining}</p>
+                      <p className={styles.projectDaysRemaining}>
+                        D-{project.daysRemaining}
+                      </p>
                     </div>
                   </div>
                 </Link>
@@ -268,12 +279,16 @@ export default function Sidebar() {
           <Link
             href="/admin"
             className={`${styles.navLink}  ${
-              pathname === "/admin" ? styles.navLinkActive : styles.navLinkInactive
+              pathname === "/admin"
+                ? styles.navLinkActive
+                : styles.navLinkInactive
             }`}
           >
             <Shield
               className={`${styles.navIcon} ${
-                pathname === "/admin" ? styles.navIconActive : styles.navIconInactive
+                pathname === "/admin"
+                  ? styles.navIconActive
+                  : styles.navIconInactive
               }`}
             />
             관리자
