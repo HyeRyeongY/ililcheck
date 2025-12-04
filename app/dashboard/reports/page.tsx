@@ -85,25 +85,35 @@ export default function ReportsPage() {
 
   // 프로젝트별 상세 보고서 계산
   const projectReports: ProjectReport[] = useMemo(() => {
+    console.log('프로젝트 보고서 계산 시작');
+    console.log('날짜 범위:', startDate, '~', endDate);
+    console.log('필터링된 프로젝트:', filteredProjects.length);
+    console.log('전체 작업그룹:', taskGroups.length);
+
     return filteredProjects.map((project) => {
       const projectTaskGroups = taskGroups.filter((g) => g.projectId === project.id);
+      console.log(`프로젝트 "${project.name}"의 작업그룹:`, projectTaskGroups.length);
 
-      // 작업(Task) 통계 - 전체 작업 중 날짜까지 완료된 것만 필터
+      // 작업(Task) 통계
       const projectTasks = projectTaskGroups.flatMap((g) => g.tasks);
+      console.log(`프로젝트 "${project.name}"의 전체 작업:`, projectTasks.length);
 
+      // 전체 작업 수
       const totalTasks = projectTasks.length;
-      const completedTasks = projectTasks.filter((t) => {
-        return t.status === 'completed' && isInDateRange(t.completedDate);
-      }).length;
+      // 완료된 작업 수 (날짜 필터링 제거)
+      const completedTasks = projectTasks.filter((t) => t.status === 'completed').length;
+      console.log(`프로젝트 "${project.name}"의 완료 작업:`, completedTasks, '/', totalTasks);
 
-      // 할일(Todo) 통계 - 전체 할일 중 날짜까지 완료된 것만 필터
+      // 할일(Todo) 통계
       const allTodos = projectTasks.flatMap((t) => t.todos);
-      const totalTodos = allTodos.length;
-      const completedTodos = allTodos.filter((todo) =>
-        todo.status === 'completed' && isInDateRange(todo.completedDate)
-      ).length;
 
-      // 진행률 계산
+      // 전체 할일 수
+      const totalTodos = allTodos.length;
+      // 완료된 할일 수 (날짜 필터링 제거)
+      const completedTodos = allTodos.filter((todo) => todo.status === 'completed').length;
+      console.log(`프로젝트 "${project.name}"의 전체 할일:`, totalTodos, ', 완료:', completedTodos);
+
+      // 진행률 계산 - 전체 대비 날짜 범위 내 완료된 비율
       const taskProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
       const todoProgress = totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
 
@@ -173,9 +183,7 @@ export default function ReportsPage() {
 
   const allTasks = filteredTaskGroups.flatMap((group) => group.tasks);
   const totalTasks = allTasks.length;
-  const completedTasks = allTasks.filter((t) =>
-    t.status === 'completed' && isInDateRange(t.completedDate)
-  ).length;
+  const completedTasks = allTasks.filter((t) => t.status === 'completed').length;
   const inProgressTasks = allTasks.filter((t) => t.status === 'in_progress').length;
   const todoTasks = allTasks.filter((t) => t.status === 'todo').length;
   const onHoldTasks = allTasks.filter((t) => t.status === 'on_hold').length;

@@ -606,9 +606,19 @@ export default function ProjectDetailPage() {
       updates.startDate = today;
     }
 
+    // 시작일 초기화 (진행률이 0으로 돌아갈 때)
+    if (progress === 0 && oldTodo.startDate) {
+      updates.startDate = undefined;
+    }
+
     // 완료일 자동 설정
-    if (progress === 100) {
+    if (progress === 100 && !oldTodo.completedDate) {
       updates.completedDate = today;
+    }
+
+    // 완료일 초기화 (진행률이 100 미만으로 낮아질 때)
+    if (progress < 100 && oldTodo.completedDate) {
+      updates.completedDate = undefined;
     }
 
     try {
@@ -667,16 +677,39 @@ export default function ProjectDetailPage() {
     // 변경사항이 있는 경우에만 업데이트
     if (newProgress !== task.progress || newStatus !== task.status) {
       try {
-        // Firebase에 작업 진행률 업데이트
-        await updateTask(taskId, {
+        // 완료일 설정
+        const updates: Partial<Task> = {
           progress: newProgress,
           status: newStatus,
-        });
+        };
+
+        // 시작일 자동 설정 (0%에서 처음 시작할 때)
+        if (task.progress === 0 && newProgress > 0 && !task.startDate) {
+          updates.startDate = new Date().toISOString();
+        }
+
+        // 시작일 초기화 (진행률이 0으로 돌아갈 때)
+        if (newProgress === 0 && task.startDate) {
+          updates.startDate = undefined;
+        }
+
+        // 완료 상태로 변경될 때 완료일 기록
+        if (newStatus === 'completed' && !task.completedDate) {
+          updates.completedDate = new Date().toISOString();
+        }
+
+        // 완료 상태에서 벗어날 때 완료일 초기화
+        if (newStatus !== 'completed' && task.completedDate) {
+          updates.completedDate = undefined;
+        }
+
+        // Firebase에 작업 진행률 업데이트
+        await updateTask(taskId, updates);
 
         // 로컬 상태 업데이트
         const updatedTasks = tasks.map(t =>
           t.id === taskId
-            ? { ...t, progress: newProgress, status: newStatus }
+            ? { ...t, ...updates }
             : t
         );
         setTasks(updatedTasks);

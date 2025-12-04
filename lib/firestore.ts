@@ -11,6 +11,7 @@ import {
   orderBy,
   Timestamp,
   serverTimestamp,
+  deleteField,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Task, TaskGroup, Project, Todo } from './types';
@@ -129,10 +130,27 @@ export async function updateTask(
 ): Promise<boolean> {
   try {
     const taskRef = doc(db, TASKS_COLLECTION, taskId);
-    await updateDoc(taskRef, {
+
+    // 현재 작업 데이터 가져오기
+    const taskSnap = await getDoc(taskRef);
+    const currentData = taskSnap.data();
+
+    const updateData: any = {
       ...updates,
       updatedAt: serverTimestamp(),
-    });
+    };
+
+    // 상태가 completed로 변경되면서 completedDate가 없으면 자동 설정
+    if (updates.status === 'completed' && !updates.completedDate && !currentData?.completedDate) {
+      updateData.completedDate = new Date().toISOString();
+    }
+
+    // 상태가 completed가 아닌데 completedDate가 설정되어 있으면 삭제
+    if (updates.status && updates.status !== 'completed' && currentData?.completedDate && updates.completedDate === undefined) {
+      updateData.completedDate = deleteField();
+    }
+
+    await updateDoc(taskRef, updateData);
 
     return true;
   } catch (error) {
@@ -174,9 +192,9 @@ export async function updateTaskProgress(
       updates.startDate = new Date().toISOString();
     }
 
-    // 진행률이 0으로 돌아가면 시작일 초기화
+    // 진행률이 0으로 돌아가면 시작일 삭제
     if (progress === 0 && currentData?.startDate) {
-      updates.startDate = undefined;
+      updates.startDate = deleteField();
     }
 
     // 진행률이 100%면 자동으로 완료 상태로 변경하고 완료일 기록
@@ -187,9 +205,9 @@ export async function updateTaskProgress(
       }
     }
 
-    // 진행률이 100 미만으로 변경되면 완료일 초기화
+    // 진행률이 100 미만으로 변경되면 완료일 삭제
     if (progress < 100 && currentData?.completedDate) {
-      updates.completedDate = undefined;
+      updates.completedDate = deleteField();
     }
 
     await updateDoc(taskRef, updates);
@@ -255,10 +273,14 @@ export async function fetchTaskGroups(userId: string): Promise<TaskGroup[]> {
     const q = query(groupsRef, where('userId', '==', userId));
     const snapshot = await getDocs(q);
 
+    console.log('fetchTaskGroups - TaskGroups 수:', snapshot.docs.length);
+
     // 먼저 모든 작업을 한 번에 가져오기 (성능 최적화)
     const tasksRef = collection(db, TASKS_COLLECTION);
     const tasksQuery = query(tasksRef, where('userId', '==', userId));
     const tasksSnapshot = await getDocs(tasksQuery);
+
+    console.log('fetchTaskGroups - Tasks 수:', tasksSnapshot.docs.length);
 
     // 작업을 projectId로 그룹화
     const tasksByProject: { [projectId: string]: Task[] } = {};
@@ -295,15 +317,21 @@ export async function fetchTaskGroups(userId: string): Promise<TaskGroup[]> {
     const groups: TaskGroup[] = snapshot.docs.map((doc) => {
       const data = doc.data();
       const projectId = data.projectId;
+      const tasksForProject = tasksByProject[projectId] || [];
+
+      console.log(`TaskGroup "${data.name}" (projectId: ${projectId}) - Tasks 수:`, tasksForProject.length);
 
       return {
         id: doc.id,
         name: data.name,
         projectId: projectId,
         progress: data.progress,
-        tasks: tasksByProject[projectId] || [],
+        tasks: tasksForProject,
       };
     });
+
+    console.log('fetchTaskGroups - 반환할 groups:', groups.length);
+    console.log('fetchTaskGroups - tasksByProject keys:', Object.keys(tasksByProject));
 
     return groups;
   } catch (error) {
@@ -530,14 +558,19 @@ export async function updateTodoInFirestore(todoId: string, updates: Partial<Tod
       return false;
     }
 
-    // undefined 값 제거
-    const cleanUpdates = { ...updates };
-    if (cleanUpdates.dueDate === undefined) {
-      delete cleanUpdates.dueDate;
-    }
-
     const taskId = currentData.taskId;
-    const progressChanged = cleanUpdates.progress !== undefined && cleanUpdates.progress !== currentData.progress;
+    const progressChanged = updates.progress !== undefined && updates.progress !== currentData.progress;
+
+    // undefined 값을 deleteField()로 변환 또는 제거
+    const cleanUpdates: any = {};
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === undefined) {
+        // undefined인 경우 deleteField()로 변환 (Firestore에서 필드 삭제)
+        cleanUpdates[key] = deleteField();
+      } else {
+        cleanUpdates[key] = value;
+      }
+    }
 
     // 진행률 변경 감지 및 자동 날짜 기록
     if (cleanUpdates.progress !== undefined && currentData) {
@@ -546,9 +579,9 @@ export async function updateTodoInFirestore(todoId: string, updates: Partial<Tod
         cleanUpdates.startDate = new Date().toISOString();
       }
 
-      // 진행률이 0으로 돌아가면 시작일 초기화
+      // 진행률이 0으로 돌아가면 시작일 삭제
       if (cleanUpdates.progress === 0 && currentData.startDate) {
-        cleanUpdates.startDate = undefined;
+        cleanUpdates.startDate = deleteField() as any;
       }
 
       // 진행률이 100%면 완료일 기록
@@ -556,9 +589,22 @@ export async function updateTodoInFirestore(todoId: string, updates: Partial<Tod
         cleanUpdates.completedDate = new Date().toISOString();
       }
 
-      // 진행률이 100 미만으로 변경되면 완료일 초기화
+      // 진행률이 100 미만으로 변경되면 완료일 삭제
       if (cleanUpdates.progress < 100 && currentData.completedDate) {
-        cleanUpdates.completedDate = undefined;
+        cleanUpdates.completedDate = deleteField() as any;
+      }
+    }
+
+    // 상태 변경 시에도 완료일 처리
+    if (cleanUpdates.status !== undefined && currentData) {
+      // 상태가 completed로 변경되면서 completedDate가 없으면 자동 설정
+      if (cleanUpdates.status === 'completed' && !cleanUpdates.completedDate && !currentData.completedDate) {
+        cleanUpdates.completedDate = new Date().toISOString();
+      }
+
+      // 상태가 completed가 아닌데 completedDate가 설정되어 있으면 삭제
+      if (cleanUpdates.status !== 'completed' && currentData.completedDate && cleanUpdates.completedDate === undefined) {
+        cleanUpdates.completedDate = deleteField() as any;
       }
     }
 

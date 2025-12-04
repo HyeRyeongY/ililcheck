@@ -699,8 +699,8 @@ export default function TodayPage() {
                                       <ProgressDots
                                         progress={todo.progress}
                                         size="sm"
-                                        onChange={progress =>
-                                          updateTodoHandler(todo.id, {
+                                        onChange={progress => {
+                                          const updates: Partial<Todo> = {
                                             progress,
                                             status:
                                               progress === 100
@@ -709,8 +709,30 @@ export default function TodayPage() {
                                                   ? "in_progress"
                                                   : "todo",
                                             updatedAt: new Date().toISOString(),
-                                          })
-                                        }
+                                          };
+
+                                          // 시작일 자동 설정 (0%에서 처음 시작할 때)
+                                          if (todo.progress === 0 && progress > 0 && !todo.startDate) {
+                                            updates.startDate = new Date().toISOString();
+                                          }
+
+                                          // 시작일 초기화 (진행률이 0으로 돌아갈 때)
+                                          if (progress === 0 && todo.startDate) {
+                                            updates.startDate = undefined;
+                                          }
+
+                                          // 완료일 자동 설정
+                                          if (progress === 100 && !todo.completedDate) {
+                                            updates.completedDate = new Date().toISOString();
+                                          }
+
+                                          // 완료일 초기화 (진행률이 100 미만으로 낮아질 때)
+                                          if (progress < 100 && todo.completedDate) {
+                                            updates.completedDate = undefined;
+                                          }
+
+                                          updateTodoHandler(todo.id, updates);
+                                        }}
                                       />
                                     </div>
 
