@@ -9,6 +9,7 @@ import {
   fetchProjects as fetchProjectsFromFirestore,
   createProject as createProjectInFirestore,
   updateProject as updateProjectInFirestore,
+  deleteProject as deleteProjectFromFirestore,
   fetchTaskGroups as fetchTaskGroupsFromFirestore,
   createTaskGroup as createTaskGroupInFirestore,
   createTodoInFirestore,
@@ -16,6 +17,7 @@ import {
   deleteTodoFromFirestore,
   fetchTodosByUser,
   fetchTodosByTask,
+  updateProjectStats as updateProjectStatsFromFirestore,
 } from './firestore';
 import { auth } from './firebase';
 
@@ -99,6 +101,14 @@ export async function updateProject(projectId: string, updates: Partial<Project>
 }
 
 /**
+ * 프로젝트 삭제
+ */
+export async function deleteProject(projectId: string): Promise<boolean> {
+  const userId = getCurrentUserId();
+  return await deleteProjectFromFirestore(userId, projectId);
+}
+
+/**
  * 사용자의 모든 작업 그룹 가져오기
  */
 export async function fetchTaskGroups(): Promise<TaskGroup[]> {
@@ -151,4 +161,20 @@ export async function fetchTodayTodos(): Promise<Todo[]> {
 export async function fetchAllTodos(): Promise<Todo[]> {
   const userId = getCurrentUserId();
   return await fetchTodosByUser(userId);
+}
+
+/**
+ * 모든 프로젝트의 통계 업데이트
+ */
+export async function updateAllProjectStats(): Promise<void> {
+  const userId = getCurrentUserId();
+  const projects = await fetchProjects();
+
+  console.log(`📊 ${projects.length}개 프로젝트의 통계 업데이트 시작...`);
+
+  for (const project of projects) {
+    await updateProjectStatsFromFirestore(project.id, userId);
+  }
+
+  console.log('✅ 모든 프로젝트 통계 업데이트 완료');
 }

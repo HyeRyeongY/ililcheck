@@ -8,6 +8,8 @@ import {
   createTask,
   createTodo,
   deleteTodo,
+  deleteTask,
+  deleteProject,
   fetchProjects,
   fetchTasksByProject,
   updateProject,
@@ -303,6 +305,73 @@ export default function ProjectDetailPage() {
     }
 
     console.log("편집 취소됨 - 모든 변경사항이 되돌려졌습니다.");
+  };
+
+  // 프로젝트 삭제 핸들러
+  const handleDeleteProject = () => {
+    setDialog({
+      isOpen: true,
+      title: "프로젝트 삭제",
+      message: "정말로 이 프로젝트를 삭제하시겠습니까?\n프로젝트와 관련된 모든 작업과 할일이 삭제됩니다.",
+      type: "error",
+      onConfirm: performDeleteProject,
+    });
+  };
+
+  // 실제 삭제 함수
+  const performDeleteProject = async () => {
+    if (!project || !params.id) {
+      console.error('프로젝트 정보 또는 ID가 없습니다.');
+      return;
+    }
+
+    setDialog(prev => ({ ...prev, isOpen: false }));
+    setSaving(true);
+
+    try {
+      console.log('🗑️ 프로젝트 삭제 요청:', params.id);
+      const success = await deleteProject(params.id as string);
+      console.log('삭제 결과:', success);
+
+      if (success) {
+        console.log('✅ 프로젝트 삭제 성공');
+        // 삭제 성공 알림
+        setDialog({
+          isOpen: true,
+          title: "삭제 완료",
+          message: "프로젝트가 성공적으로 삭제되었습니다.",
+          type: "success",
+          onConfirm: () => {
+            // 대시보드로 이동
+            window.location.href = "/dashboard";
+          },
+        });
+      } else {
+        console.error('❌ 프로젝트 삭제 실패 (success=false)');
+        setDialog({
+          isOpen: true,
+          title: "삭제 실패",
+          message: "프로젝트 삭제에 실패했습니다. 다시 시도해주세요.",
+          type: "error",
+          onConfirm: () => {
+            setDialog(prev => ({ ...prev, isOpen: false }));
+          },
+        });
+      }
+    } catch (error) {
+      console.error("❌ 프로젝트 삭제 중 예외 발생:", error);
+      setDialog({
+        isOpen: true,
+        title: "오류 발생",
+        message: `프로젝트 삭제 중 오류가 발생했습니다.\n${error instanceof Error ? error.message : String(error)}`,
+        type: "error",
+        onConfirm: () => {
+          setDialog(prev => ({ ...prev, isOpen: false }));
+        },
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   // 실제 저장 함수
@@ -851,6 +920,46 @@ export default function ProjectDetailPage() {
     }
   };
 
+  // 작업 삭제 처리
+  const handleTaskDelete = async (taskId: string, taskTitle: string) => {
+    setDialog({
+      isOpen: true,
+      title: "작업 삭제",
+      message: `"${taskTitle}" 작업을 삭제하시겠습니까?\n이 작업에 속한 모든 할일도 함께 삭제됩니다.`,
+      type: "error",
+      onConfirm: async () => {
+        try {
+          // Firebase에서 작업 삭제 (할일들도 자동 삭제됨)
+          await deleteTask(taskId);
+
+          // 작업 목록 새로고침
+          await reloadTasks();
+
+          setDialog({
+            isOpen: true,
+            title: "삭제 완료",
+            message: "작업이 성공적으로 삭제되었습니다.",
+            type: "success",
+            onConfirm: () => {
+              setDialog(prev => ({ ...prev, isOpen: false }));
+            },
+          });
+        } catch (error) {
+          console.error("작업 삭제 실패:", error);
+          setDialog({
+            isOpen: true,
+            title: "삭제 실패",
+            message: "작업 삭제에 실패했습니다. 다시 시도해주세요.",
+            type: "error",
+            onConfirm: () => {
+              setDialog(prev => ({ ...prev, isOpen: false }));
+            },
+          });
+        }
+      },
+    });
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -972,16 +1081,25 @@ export default function ProjectDetailPage() {
             ) : (
               <>
                 {isHeaderExpanded && (
-                  <button
-                    onClick={() => {
-                      setShowSettings(true);
-                      setIsHeaderExpanded(true);
-                    }}
-                    className={styles.editDescriptionButton}
-                  >
-                    <Edit3 className="w-4 h-4" />
-                    수정
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowSettings(true);
+                        setIsHeaderExpanded(true);
+                      }}
+                      className={styles.editDescriptionButton}
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      수정
+                    </button>
+                    <button
+                      onClick={handleDeleteProject}
+                      className={styles.deleteButton}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      삭제
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
@@ -1520,6 +1638,17 @@ export default function ProjectDetailPage() {
         onConfirm={dialog.onConfirm}
         onCancel={() => setDialog(prev => ({ ...prev, isOpen: false }))}
       />
+
+      {/* 삭제 중 로딩 오버레이 */}
+      {saving && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingSpinner}>
+            <div className={styles.spinner}></div>
+            <p>프로젝트 삭제 중...</p>
+            <p className={styles.loadingSubtext}>관련된 모든 데이터를 삭제하고 있습니다.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

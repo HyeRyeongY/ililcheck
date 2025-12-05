@@ -133,6 +133,13 @@ export default function Sidebar() {
 
     // 현재 프로젝트 페이지에 있는지 확인
     const isOnProjectPage = pathname.startsWith("/dashboard/projects/");
+    const isOnReportsPage = pathname === "/dashboard/reports";
+
+    // 보고서 페이지에 있는 경우 URL 파라미터로 카테고리 전달
+    if (isOnReportsPage) {
+      router.push(`/dashboard/reports?category=${category}`);
+      return;
+    }
 
     // 프로젝트 페이지에 있는 경우에만 해당 카테고리의 첫 번째 프로젝트로 이동
     if (isOnProjectPage) {
@@ -147,7 +154,7 @@ export default function Sidebar() {
         router.push("/dashboard");
       }
     }
-    // 다른 페이지(오늘의 할일, 달력, 보고서)에 있으면 현재 페이지 유지하면서 카테고리만 변경
+    // 다른 페이지(오늘의 할일, 달력)에 있으면 현재 페이지 유지하면서 카테고리만 변경
   };
 
   return (

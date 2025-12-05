@@ -10,6 +10,8 @@ export interface Project {
   category: 'personal' | 'work'; // 개인/업무 구분
   completedTasks?: number;
   totalTasks?: number;
+  completedTodos?: number;
+  totalTodos?: number;
 }
 
 export interface TaskGroup {
@@ -73,7 +75,7 @@ export interface ProjectReport {
 
 export interface ProgressHistoryPoint {
   date: string;
-  progress: number;
+  progress: number | null;
 }
 
 export type TabType = 'today' | 'calendar' | 'reports';
