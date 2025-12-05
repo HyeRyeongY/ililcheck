@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { RotateCcw } from "lucide-react";
+import { useState } from "react";
 import styles from "./ProgressDots.module.css";
 
 interface ProgressDotsProps {
@@ -53,15 +53,6 @@ export default function ProgressDots({
 
   return (
     <div className={`${styles.container} ${styles[size]}`}>
-      <button
-        onClick={handleReset}
-        className={styles.resetButton}
-        title="진행률 0%로 리셋"
-        aria-label="진행률 리셋"
-        disabled={!showReset || disabled || progress == 0}
-      >
-        <RotateCcw className={styles.resetIcon} />
-      </button>
       <div className={styles.dotsContainer}>
         {dotsArray.map((value, index) => {
           const isFilled = index < filledDots;
@@ -89,6 +80,15 @@ export default function ProgressDots({
       <div className={styles.percentageText}>
         {hoveredIndex !== null && !disabled ? previewProgress : progress}%
       </div>
+      <button
+        onClick={handleReset}
+        className={styles.resetButton}
+        title="진행률 0%로 리셋"
+        aria-label="진행률 리셋"
+        disabled={!showReset || disabled || progress == 0}
+      >
+        <RotateCcw className={styles.resetIcon} />
+      </button>
     </div>
   );
 }

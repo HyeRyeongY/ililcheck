@@ -7,9 +7,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   createTask,
   createTodo,
-  deleteTodo,
-  deleteTask,
   deleteProject,
+  deleteTask,
+  deleteTodo,
   fetchProjects,
   fetchTasksByProject,
   updateProject,
@@ -312,7 +312,8 @@ export default function ProjectDetailPage() {
     setDialog({
       isOpen: true,
       title: "프로젝트 삭제",
-      message: "정말로 이 프로젝트를 삭제하시겠습니까?\n프로젝트와 관련된 모든 작업과 할일이 삭제됩니다.",
+      message:
+        "정말로 이 프로젝트를 삭제하시겠습니까?\n프로젝트와 관련된 모든 작업과 할일이 삭제됩니다.",
       type: "error",
       onConfirm: performDeleteProject,
     });
@@ -321,7 +322,7 @@ export default function ProjectDetailPage() {
   // 실제 삭제 함수
   const performDeleteProject = async () => {
     if (!project || !params.id) {
-      console.error('프로젝트 정보 또는 ID가 없습니다.');
+      console.error("프로젝트 정보 또는 ID가 없습니다.");
       return;
     }
 
@@ -329,12 +330,12 @@ export default function ProjectDetailPage() {
     setSaving(true);
 
     try {
-      console.log('🗑️ 프로젝트 삭제 요청:', params.id);
+      console.log("🗑️ 프로젝트 삭제 요청:", params.id);
       const success = await deleteProject(params.id as string);
-      console.log('삭제 결과:', success);
+      console.log("삭제 결과:", success);
 
       if (success) {
-        console.log('✅ 프로젝트 삭제 성공');
+        console.log("✅ 프로젝트 삭제 성공");
         // 삭제 성공 알림
         setDialog({
           isOpen: true,
@@ -347,7 +348,7 @@ export default function ProjectDetailPage() {
           },
         });
       } else {
-        console.error('❌ 프로젝트 삭제 실패 (success=false)');
+        console.error("❌ 프로젝트 삭제 실패 (success=false)");
         setDialog({
           isOpen: true,
           title: "삭제 실패",
@@ -736,7 +737,7 @@ export default function ProjectDetailPage() {
     }
 
     // 상태 업데이트
-    const newStatus: Task['status'] =
+    const newStatus: Task["status"] =
       newProgress === 100
         ? "completed"
         : newProgress > 0
@@ -763,12 +764,12 @@ export default function ProjectDetailPage() {
         }
 
         // 완료 상태로 변경될 때 완료일 기록
-        if (newStatus === 'completed' && !task.completedDate) {
+        if (newStatus === "completed" && !task.completedDate) {
           updates.completedDate = new Date().toISOString();
         }
 
         // 완료 상태에서 벗어날 때 완료일 초기화
-        if (newStatus !== 'completed' && task.completedDate) {
+        if (newStatus !== "completed" && task.completedDate) {
           updates.completedDate = undefined;
         }
 
@@ -777,9 +778,7 @@ export default function ProjectDetailPage() {
 
         // 로컬 상태 업데이트
         const updatedTasks = tasks.map(t =>
-          t.id === taskId
-            ? { ...t, ...updates }
-            : t
+          t.id === taskId ? { ...t, ...updates } : t
         );
         setTasks(updatedTasks);
 
@@ -1262,17 +1261,17 @@ export default function ProjectDetailPage() {
             />
             <div className={styles.taskInputActions}>
               <button
-                onClick={cancelAddNewTask}
-                className={styles.cancelTaskBtn}
-              >
-                취소
-              </button>
-              <button
                 onClick={createNewTask}
                 className={styles.saveTaskBtn}
                 disabled={!newTaskName.trim()}
               >
                 추가
+              </button>
+              <button
+                onClick={cancelAddNewTask}
+                className={styles.cancelTaskBtn}
+              >
+                취소
               </button>
             </div>
           </div>
@@ -1301,6 +1300,16 @@ export default function ProjectDetailPage() {
                       }
                     }}
                   >
+                    <button
+                      onClick={() => toggleTaskExpansion(task.id)}
+                      className={styles.taskToggle}
+                    >
+                      {expandedTasks.has(task.id) ? (
+                        <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
+                      )}
+                    </button>
                     <div className={styles.taskInfo}>
                       <div className={styles.taskTitleSection}>
                         <div
@@ -1319,13 +1328,6 @@ export default function ProjectDetailPage() {
                           ) : (
                             <div className={styles.todoStatusDot} />
                           )}
-                        </div>
-                        <div className={styles.todoBadge}>
-                          {
-                            task.todos.filter(t => t.status === "completed")
-                              .length
-                          }
-                          /{task.todos.length}
                         </div>
 
                         {editingTaskId === task.id ? (
@@ -1372,6 +1374,21 @@ export default function ProjectDetailPage() {
                               <ProgressBar progress={task.progress} />
                             )}
                           </div>
+                          <div className={styles.todoBadge}>
+                            {task.todos.length > 0
+                              ? `할 일 ${
+                                  task.todos.filter(
+                                    t => t.status === "completed"
+                                  ).length
+                                }/${task.todos.length}`
+                              : "할 일 없음"}
+                            &nbsp;•&nbsp;
+                            {task.progress === 100
+                              ? "완료"
+                              : task.progress > 0
+                                ? "진행 중"
+                                : "시작 전"}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1391,17 +1408,6 @@ export default function ProjectDetailPage() {
                     >
                       <Plus className="w-4 h-4" />
                     </button>
-
-                    <button
-                      onClick={() => toggleTaskExpansion(task.id)}
-                      className={styles.taskToggle}
-                    >
-                      {expandedTasks.has(task.id) ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
-                    </button>
                   </div>
 
                   {/* 확장된 할일 목록 */}
@@ -1412,37 +1418,43 @@ export default function ProjectDetailPage() {
 
                       {isAddingTodo === task.id && (
                         <div className={styles.addTodoInput}>
-                          <div className={styles.todoInputRow}>
-                            <input
-                              type="text"
-                              className={styles.todoInput}
-                              placeholder="할일을 입력하세요"
-                              value={newTodoName}
-                              onChange={e => setNewTodoName(e.target.value)}
-                              autoFocus
-                              onKeyDown={e => {
-                                if (e.key === "Enter" && newTodoName.trim()) {
-                                  createNewTodo(task.id);
-                                } else if (e.key === "Escape") {
-                                  setIsAddingTodo(null);
+                          <input
+                            type="text"
+                            className={styles.todoInput}
+                            placeholder="할일을 입력하세요"
+                            value={newTodoName}
+                            onChange={e => setNewTodoName(e.target.value)}
+                            autoFocus
+                            onKeyDown={e => {
+                              if (e.key === "Enter" && newTodoName.trim()) {
+                                createNewTodo(task.id);
+                              } else if (e.key === "Escape") {
+                                setIsAddingTodo(null);
 
-                                  setNewTodoName("");
-                                  setNewTodoDueDate(null);
-                                }
-                              }}
-                            />
-                            <DatePicker
-                              selected={newTodoDueDate}
-                              onChange={date => setNewTodoDueDate(date)}
-                              placeholderText="미정"
-                              dateFormat="yyyy-MM-dd"
-                              className={styles.todoDatePicker}
-                              locale="ko"
-                              isClearable
-                            />
-                          </div>
+                                setNewTodoName("");
+                                setNewTodoDueDate(null);
+                              }
+                            }}
+                          />
+                          <DatePicker
+                            selected={newTodoDueDate}
+                            onChange={date => setNewTodoDueDate(date)}
+                            placeholderText="미정"
+                            dateFormat="yyyy-MM-dd"
+                            className={styles.todoDatePicker}
+                            locale="ko"
+                            isClearable
+                          />
 
                           <div className={styles.todoInputActions}>
+                            <button
+                              onClick={() => createNewTodo(task.id)}
+                              className={styles.saveTodoBtn}
+                              disabled={!newTodoName.trim()}
+                            >
+                              추가
+                            </button>
+
                             <button
                               onClick={() => {
                                 setIsAddingTodo(null);
@@ -1453,14 +1465,6 @@ export default function ProjectDetailPage() {
                               className={styles.cancelTodoBtn}
                             >
                               취소
-                            </button>
-
-                            <button
-                              onClick={() => createNewTodo(task.id)}
-                              className={styles.saveTodoBtn}
-                              disabled={!newTodoName.trim()}
-                            >
-                              추가
                             </button>
                           </div>
                         </div>
@@ -1645,7 +1649,9 @@ export default function ProjectDetailPage() {
           <div className={styles.loadingSpinner}>
             <div className={styles.spinner}></div>
             <p>프로젝트 삭제 중...</p>
-            <p className={styles.loadingSubtext}>관련된 모든 데이터를 삭제하고 있습니다.</p>
+            <p className={styles.loadingSubtext}>
+              관련된 모든 데이터를 삭제하고 있습니다.
+            </p>
           </div>
         </div>
       )}

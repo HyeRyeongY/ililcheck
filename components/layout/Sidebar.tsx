@@ -271,7 +271,7 @@ export default function Sidebar() {
                         {project.startDate} ~ {project.endDate}
                       </p>
                       <p className={styles.projectDaysRemaining}>
-                        D-{project.daysRemaining}
+                        D{project.daysRemaining}
                       </p>
                     </div>
                   </div>

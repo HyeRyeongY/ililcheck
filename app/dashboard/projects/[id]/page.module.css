@@ -65,10 +65,11 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: #111827;
-  padding: 0.5rem 0.75rem;
+  padding: 0;
   border-radius: 0.375rem;
-  background-color: #f9fafb;
-  border: 1px solid #d1d5db;
+  background-color: #eff6ff;
+  /* border: 2px dashed #d1d5db; */
+  box-sizing: border-box;
 }
 
 .dateInputWrapper {
@@ -78,10 +79,10 @@
   gap: 0.5rem;
   font-size: 0.875rem;
   color: #111827;
-  background-color: #f9fafb;
-  border: 1px solid #d1d5db;
+  background-color: #eff6ff;
+  /* background-color: #eff6ff;
+  border: 2px dashed #d1d5db; */
   border-radius: 0.375rem;
-  padding: 0.25rem 0.5rem;
   cursor: pointer;
 }
 
@@ -173,6 +174,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  line-height: 1.125rem;
   padding: 0.5rem 0.75rem;
   border-radius: 0.375rem;
   font-size: 0.875rem;
@@ -192,6 +194,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  line-height: 1.125rem;
   padding: 0.5rem 0.75rem;
   border-radius: 0.375rem;
   font-size: 0.875rem;
@@ -332,9 +335,9 @@
 .addTaskButton { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #3b82f6; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
 .addTaskButton:hover { background-color: #eff6ff; }
 .addTaskButton:disabled { color: #9ca3af; background-color: #f3f4f6; cursor: not-allowed; }
-.addTaskInput { padding: 1rem; background-color: #f9fafb; border-radius: 0.5rem; margin: 0.5rem 0; }
-.taskInput { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; margin-bottom: 0.75rem; }
-.taskInputActions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+.addTaskInput { display: flex; gap: 0.75rem; padding: 1rem; background-color: #f9fafb; border-radius: 0.5rem; margin: 0.5rem 0; }
+.taskInput { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; }
+.taskInputActions { flex-shrink: 0; display: flex; gap: 0.5rem; justify-content: flex-end; }
 .cancelTaskBtn, .saveTaskBtn { padding: 0.375rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 500; transition: all 0.2s; }
 .cancelTaskBtn { background-color: white; color: #6b7280; border: 1px solid #d1d5db; }
 .saveTaskBtn { background-color: #3b82f6; color: white; border: 1px solid #3b82f6; }
@@ -392,22 +395,22 @@
 }
 
 .clickHint { color: #9ca3af; font-size: 0.75rem; }
-.addTodoBtn, .taskToggle { padding: 0.5rem; border-radius: 0.375rem; color: #6b7280; transition: all 0.2s; }
+.addTodoBtn, .taskToggle { padding: 0.25rem; border-radius: 0.375rem; color: #6b7280; transition: all 0.2s; }
 .addTodoBtn:hover, .taskToggle:hover { background-color: #f3f4f6; color: #374151; }
-.todoList { background-color: #f9fafb; border-top: 1px solid #e5e7eb; }
-.addTodoInput { padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; }
-.todoInput { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; margin-bottom: 0.75rem; }
-.todoInputActions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+.todoList { }
+.addTodoInput { display: flex; gap: 0.5rem; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; }
+.todoInput { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; }
+.todoInputActions { flex-shrink: 0; display: flex; gap: 0.5rem; justify-content: flex-end; }
 .cancelTodoBtn, .saveTodoBtn { padding: 0.375rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 500; transition: all 0.2s; }
 .cancelTodoBtn { background-color: white; color: #6b7280; border: 1px solid #d1d5db; }
 .saveTodoBtn { background-color: #3b82f6; color: white; border: 1px solid #3b82f6; }
 .saveTodoBtn:disabled { background-color: #9ca3af; border-color: #9ca3af; cursor: not-allowed; }
-.todoItem { display: flex; flex-direction: column; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; transition: background-color 0.2s; gap: 0.5rem; }
+.todoItem { display: flex; flex-direction: column; padding: 0.75rem 1rem;  transition: background-color 0.2s; gap: 0.5rem; }
 .todoItem:hover { background-color: #f3f4f6; }
 .todoItem:last-child { border-bottom: none; }
 .todoContent { display: flex; align-items: flex-start; gap: 0.75rem; width: 100%; min-width: 0; }
 .todoInfo { display: flex; align-items: center; gap: 0.5rem; min-width: 0; flex: 1; }
-.todoStatus { width: 0.5rem; height: 0.5rem; border-radius: 50%; flex-shrink: 0;}
+.todoStatus { margin: 0.5rem; width: 0.5rem; height: 0.5rem; border-radius: 50%; flex-shrink: 0;}
 .todoStatus.todo { background-color: #d1d5db; }
 .todoStatus.in_progress { background-color: #3b82f6; }
 .todoStatus.completed { background-color: #22c55e; }
@@ -420,7 +423,7 @@
 .todoTitle.completed { text-decoration: line-through; color: #9ca3af; }
 .editTodoInput { font-size: 0.875rem; color: #374151; border: none; outline: none; background: transparent; border-bottom: 1px solid #3b82f6; padding: 0; margin: 0; min-width: 150px; }
 .editIcon { width: 0.75rem; height: 0.75rem; color: #9ca3af; opacity: 0; transition: opacity 0.2s; flex-shrink: 0; margin-top: 0.125rem; }
-.todoControls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; }
+.todoControls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; margin-left: 0.75rem; padding-left:1.25rem; border-left: 0.125rem solid #e5e7eb; }
 .todoProgress { flex-shrink: 0; height: 20px; display: flex; align-items: center; }
 .todoActions { display: flex; gap: 0.5rem; opacity: 1; flex-wrap: wrap; }
 .todoActionBtn { display: flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 500; border: 1px solid transparent; background-color: transparent; color: #6b7280; white-space: nowrap; }
@@ -428,7 +431,6 @@
 .emptyTodos { padding: 2rem 1rem; text-align: center; color: #6b7280; font-size: 0.875rem; }
 
 /* 할일 입력 행 및 날짜 선택 */
-.todoInputRow { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem; }
 .todoDatePicker { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; min-width: 120px; }
 
 /* 할일 제목 및 날짜 행 */
@@ -463,7 +465,7 @@
   }
   
   .taskStatsInfo {
-    align-self: flex-start;
+    align-self: flex-start; 
   }
   
   .taskProgressContainer { 
