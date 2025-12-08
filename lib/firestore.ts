@@ -48,6 +48,7 @@ export async function updateProjectStats(projectId: string, userId: string): Pro
     let completedTasksCount = 0; // 재계산 후 완료된 작업 개수
 
     for (const taskDoc of tasksSnapshot.docs) {
+      const taskData = taskDoc.data();
       const todosRef = collection(db, TODOS_COLLECTION);
       const todosQuery = query(
         todosRef,
@@ -75,7 +76,6 @@ export async function updateProjectStats(projectId: string, userId: string): Pro
 
         // 작업 문서 업데이트 (progress와 status)
         const taskRef = doc(db, TASKS_COLLECTION, taskDoc.id);
-        const taskData = taskDoc.data();
         const updates: any = {
           progress: avgProgress,
           status: newStatus,
@@ -158,21 +158,27 @@ export async function fetchTasks(userId: string): Promise<Task[]> {
     );
     const snapshot = await getDocs(q);
 
-    const tasks: Task[] = snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        title: data.title,
-        status: data.status,
-        progress: data.progress,
-        dueDate: data.dueDate,
-        projectId: data.projectId,
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        startDate: data.startDate,
-        completedDate: data.completedDate,
-        todos: [], // 여기서는 할일을 포함하지 않음
-      };
-    });
+    const tasks: Task[] = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const data = doc.data();
+
+        // 해당 작업의 할일들 가져오기
+        const todos = await fetchTodosByTask(doc.id, userId);
+
+        return {
+          id: doc.id,
+          title: data.title,
+          status: data.status,
+          progress: data.progress,
+          dueDate: data.dueDate,
+          projectId: data.projectId,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          startDate: data.startDate,
+          completedDate: data.completedDate,
+          todos: todos,
+        };
+      })
+    );
 
     // 클라이언트 측에서 정렬 (createdAt 기준 내림차순)
     return tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

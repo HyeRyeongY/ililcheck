@@ -1,17 +1,15 @@
 "use client";
 
 import Header from "@/components/layout/Header";
-import MiniLineChart from "@/components/ui/MiniLineChart";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchProjects, fetchTasks } from "@/lib/api";
 import { Project, ProjectReport, Task } from "@/lib/types";
-import { useEffect, useMemo, useState } from "react";
+import { ko } from "date-fns/locale";
+import React, { useEffect, useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { ko } from "date-fns/locale";
 import styles from "./page.module.css";
-import React from "react";
 
 // 커스텀 날짜 입력 컴포넌트
 const CustomDateInput = React.forwardRef(
@@ -181,25 +179,13 @@ export default function ReportsPage() {
       // 할일 통계 계산
       let totalTodos = 0;
       let completedTodos = 0;
-      const startDateStr = formatDateString(startDate);
-      const endDateStr = formatDateString(endDate);
 
       projectTasks.forEach(task => {
         task.todos.forEach(todo => {
-          // 완료된 할일
-          if (todo.status === 'completed' && todo.completedDate) {
-            const todoCompletedDateStr = todo.completedDate.split('T')[0];
-            if (todoCompletedDateStr >= startDateStr && todoCompletedDateStr <= endDateStr) {
-              totalTodos++;
-              completedTodos++;
-            }
-          }
-          // 진행 중인 할일
-          else if (todo.status === 'in_progress' && todo.startDate) {
-            const todoStartDateStr = todo.startDate.split('T')[0];
-            if (todoStartDateStr >= startDateStr && todoStartDateStr <= endDateStr) {
-              totalTodos++;
-            }
+          // 기간 내 작업에 속한 모든 할일을 카운트
+          totalTodos++;
+          if (todo.status === 'completed') {
+            completedTodos++;
           }
         });
       });
@@ -433,43 +419,58 @@ export default function ReportsPage() {
               {projectReports.length === 0 ? (
                 <p className={styles.emptyState}>아직 프로젝트가 없습니다.</p>
               ) : (
-                projectReports.map(report => (
-                  <div
-                    key={report.id}
-                    className={styles.projectItem}
-                    style={{ borderColor: report.color }}
-                  >
-                    <div className={styles.projectHeader}>
-                      <div className={styles.projectInfo}>
-                        <h4 className={styles.projectName}>{report.name}</h4>
-                        <div className={styles.projectDetailStats}>
-                          <p className={styles.projectStatItem}>
-                            작업: {report.completedTasks}/{report.totalTasks} (
-                            {report.taskProgress}%)
-                          </p>
-                          <p className={styles.projectStatItem}>
-                            할일: {report.completedTodos}/{report.totalTodos} (
-                            {report.todoProgress}%)
-                          </p>
+                projectReports.map(report => {
+                  const projectTasks = projectTasksMap.get(report.id) || [];
+
+                  return (
+                    <div key={report.id} className={styles.projectItem}>
+                      <div
+                        className={styles.projectColorBar}
+                        style={{ backgroundColor: report.color }}
+                      />
+                      <div className={styles.projectContent}>
+                        {/* 프로젝트 헤더 - 간략한 통계 */}
+                        <div className={styles.projectHeader}>
+                          <div className={styles.projectInfo}>
+                            <h4 className={styles.projectName}>{report.name}</h4>
+                            <div className={styles.todoBadge}>
+                                작업 {report.completedTasks}/{report.totalTasks} 완료&nbsp;•&nbsp;할 일 {report.completedTodos}/{report.totalTodos} 완료&nbsp;•&nbsp;진행률 {report.overallProgress}%
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 작업 목록 */}
+                        <div className={styles.tasksList}>
+                          {projectTasks.map(task => (
+                            <div key={task.id} className={styles.taskItem}>
+                              <div className={styles.taskHeader}>
+                                <div className={styles.taskTitleRow}>
+                                  <span className={styles.taskTitle}>{task.title}</span>
+                                  <span className={styles.taskProgress}>{task.progress}%</span>
+                                </div>
+                              </div>
+
+                              {/* 할일 목록 */}
+                              {task.todos.length > 0 && (
+                                <div className={styles.todosList}>
+                                  {task.todos.map(todo => (
+                                    <div key={todo.id} className={styles.todoItem}>
+                                      <div className={styles.todoTitleRow}>
+                                        <span className={styles.todoIcon}>└</span>
+                                        <span className={styles.todoTitle}>{todo.title}</span>
+                                        <span className={styles.todoProgress}>{todo.progress}%</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <div className={styles.projectRightSection}>
-                        <MiniLineChart
-                          data={report.progressHistory}
-                          color={report.color}
-                        />
-                        <span className={styles.projectProgress}>
-                          {report.overallProgress}%
-                        </span>
-                      </div>
                     </div>
-                    <ProgressBar
-                      progress={report.overallProgress}
-                      color={report.color}
-                      showLabel={false}
-                    />
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

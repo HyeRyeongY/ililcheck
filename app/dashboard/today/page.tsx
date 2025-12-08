@@ -160,11 +160,13 @@ export default function TodayPage() {
 
       // 프로젝트 통계
       const allProjectTodos = projectTasks.flatMap(task => task.todos);
+      const completedTasks = projectTasks.filter(t => t.status === "completed").length;
       const projectStats = {
         total: allProjectTodos.length,
         completed: allProjectTodos.filter(t => t.status === "completed").length,
         onHold: allProjectTodos.filter(t => t.status === "on_hold").length,
         taskCount: projectTasks.length,
+        completedTasks: completedTasks,
       };
       const projectActiveTodos = projectStats.total - projectStats.onHold;
       const projectCompletionRate =
@@ -458,10 +460,10 @@ export default function TodayPage() {
                         <h3 className={styles.projectName}>{project.name}</h3>
                         <div className={styles.projectChips}>
                           <span className={styles.chip}>
-                            작업 {stats.taskCount}개
+                            작업 {stats.completedTasks}/{stats.taskCount}
                           </span>
                           <span className={styles.chip}>
-                            할일 {stats.total}개
+                            할일 {stats.completed}/{stats.total}
                           </span>
                         </div>
                       </div>
