@@ -327,6 +327,16 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  position: relative;
+  flex: 1;
+}
+
+.dateDisplay {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  min-width: 200px;
+  text-align: left;
 }
 
 .periodToggle {

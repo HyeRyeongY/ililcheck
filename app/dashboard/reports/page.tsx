@@ -4,10 +4,8 @@ import Header from "@/components/layout/Header";
 import MiniLineChart from "@/components/ui/MiniLineChart";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCategory } from "@/contexts/CategoryContext";
-import { fetchProjects, updateAllProjectStats } from "@/lib/api";
-import { Project, ProjectReport } from "@/lib/types";
-import { useSearchParams } from "next/navigation";
+import { fetchProjects, fetchTasks } from "@/lib/api";
+import { Project, ProjectReport, Task } from "@/lib/types";
 import { useEffect, useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -32,48 +30,22 @@ CustomDateInput.displayName = "CustomDateInput";
 
 export default function ReportsPage() {
   const { user, loading: authLoading } = useAuth();
-  const { currentCategory } = useCategory();
-  const searchParams = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   // 기간 모드: 'today' 또는 'custom'
   const [periodMode, setPeriodMode] = useState<"today" | "custom">("today");
   // 오늘 날짜를 기본값으로 설정
   const todayString = new Date().toISOString().split("T")[0];
-  const [startDate, setStartDate] = useState(todayString);
-  const [endDate, setEndDate] = useState(todayString);
-  const [selectedCategory, setSelectedCategory] = useState<
-    "all" | "personal" | "work"
-  >("all");
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  // 통계 업데이트 핸들러
-  const handleUpdateStats = async () => {
-    setIsUpdating(true);
-    try {
-      await updateAllProjectStats();
-      // 업데이트 후 프로젝트 다시 불러오기
-      const userProjects = await fetchProjects();
-      setProjects(userProjects);
-      alert('모든 프로젝트 통계가 업데이트되었습니다.');
-    } catch (error) {
-      console.error('통계 업데이트 실패:', error);
-      alert('통계 업데이트에 실패했습니다.');
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  // URL 파라미터 또는 CategoryContext에서 카테고리 초기화
-  useEffect(() => {
-    const categoryParam = searchParams.get("category");
-    if (categoryParam === "personal" || categoryParam === "work") {
-      setSelectedCategory(categoryParam);
-    } else {
-      // URL 파라미터가 없으면 CategoryContext의 현재 카테고리 사용
-      setSelectedCategory(currentCategory);
-    }
-  }, [searchParams, currentCategory]);
+  const [startDate, setStartDate] = useState<Date | null>(new Date());
+  const [endDate, setEndDate] = useState<Date | null>(new Date());
+  // DatePicker 표시 여부
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  // DatePicker 내부에서 임시로 선택 중인 날짜 (확정 전)
+  const [tempStartDate, setTempStartDate] = useState<Date | null>(null);
+  const [tempEndDate, setTempEndDate] = useState<Date | null>(null);
+  // DatePicker ref 추가
+  const datePickerRef = React.useRef<DatePicker>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -83,22 +55,33 @@ export default function ReportsPage() {
       if (!user) {
         console.log("user 없음, 데이터 초기화");
         setProjects([]);
+        setTasks([]);
         return;
       }
 
       console.log("데이터 fetch 시작");
       setDataLoading(true);
       try {
-        console.log("fetchProjects 호출 중...");
-        const userProjects = await fetchProjects();
+        console.log("fetchProjects 및 fetchTasks 호출 중...");
+        const [userProjects, userTasks] = await Promise.all([
+          fetchProjects(),
+          fetchTasks()
+        ]);
         console.log(
           "✅ 로드된 프로젝트:",
           userProjects.length,
           "개",
           userProjects
         );
+        console.log(
+          "✅ 로드된 작업:",
+          userTasks.length,
+          "개",
+          userTasks
+        );
 
         setProjects(userProjects);
+        setTasks(userTasks);
         console.log("✅ setState 완료");
       } catch (error) {
         console.error("❌ 데이터 로드 실패:", error);
@@ -111,38 +94,118 @@ export default function ReportsPage() {
     loadData();
   }, [user]);
 
-  // 날짜 범위 변경 핸들러
-  const handleDateRangeChange = (start: string, end: string) => {
-    setStartDate(start);
-    setEndDate(end);
+  // 날짜를 문자열로 변환하는 헬퍼 함수 (yyyy-MM-dd 형식)
+  const formatDateString = (date: Date | null) => {
+    if (!date) return todayString;
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .split("T")[0];
   };
 
-  // 카테고리별 프로젝트 필터링
-  const filteredProjects = useMemo(() => {
-    if (selectedCategory === "all") return projects;
-    return projects.filter(p => p.category === selectedCategory);
-  }, [projects, selectedCategory]);
+  // 날짜를 표시용 문자열로 변환 (yyyy년 mm월 dd일 형식)
+  const formatDisplayDate = (date: Date | null) => {
+    if (!date) {
+      const parts = todayString.split('-');
+      return `${parts[0]}년 ${parseInt(parts[1])}월 ${parseInt(parts[2])}일`;
+    }
+    const dateStr = formatDateString(date);
+    const parts = dateStr.split('-');
+    return `${parts[0]}년 ${parseInt(parts[1])}월 ${parseInt(parts[2])}일`;
+  };
 
-  // 프로젝트별 상세 보고서 계산 (프로젝트 캐시 값 사용)
+  // 선택된 기간에 맞는 작업 필터링
+  const filteredTasks = useMemo(() => {
+    // 시작일 00:00:00 ~ 종료일 23:59:59
+    const startDateStr = formatDateString(startDate);
+    const endDateStr = formatDateString(endDate);
+
+    console.log(`=== 작업 필터링: ${startDateStr} ~ ${endDateStr} ===`);
+
+    return tasks.filter(task => {
+      // 완료된 작업: completedDate가 기간 내에 있는지 확인
+      if (task.status === 'completed' && task.completedDate) {
+        const completedDateStr = task.completedDate.split('T')[0];
+        const isInRange = completedDateStr >= startDateStr && completedDateStr <= endDateStr;
+        console.log(`  [완료] ${task.title}: ${completedDateStr} => ${isInRange ? '✓' : '✗'}`);
+        return isInRange;
+      }
+
+      // 진행 중인 작업: startDate가 기간 내에 있는지 확인
+      if (task.status === 'in_progress' && task.startDate) {
+        const taskStartDateStr = task.startDate.split('T')[0];
+        const isInRange = taskStartDateStr >= startDateStr && taskStartDateStr <= endDateStr;
+        console.log(`  [진행중] ${task.title}: ${taskStartDateStr} => ${isInRange ? '✓' : '✗'}`);
+        return isInRange;
+      }
+
+      return false;
+    });
+  }, [tasks, startDate, endDate]);
+
+  // 프로젝트별로 필터링된 작업 그룹화
+  const projectTasksMap = useMemo(() => {
+    const map = new Map<string, Task[]>();
+    filteredTasks.forEach(task => {
+      const projectTasks = map.get(task.projectId) || [];
+      projectTasks.push(task);
+      map.set(task.projectId, projectTasks);
+    });
+    return map;
+  }, [filteredTasks]);
+
+  // 필터링된 작업이 있는 프로젝트만 표시
+  const filteredProjects = useMemo(() => {
+    const projectIds = new Set(filteredTasks.map(task => task.projectId));
+    return projects.filter(project => projectIds.has(project.id));
+  }, [projects, filteredTasks]);
+
+  // 프로젝트별 상세 보고서 계산 (선택된 기간의 작업 기반)
   const projectReports: ProjectReport[] = useMemo(() => {
-    console.log("=== 프로젝트 보고서 계산 시작 (캐시 사용) ===");
+    console.log("=== 프로젝트 보고서 계산 시작 (기간 필터링) ===");
     console.log(
-      "필터링된 프로젝트 수:",
-      filteredProjects.length,
-      filteredProjects
+      "필터링된 작업 수:",
+      filteredTasks.length,
+      filteredTasks
     );
 
     return filteredProjects.map(project => {
       console.log(`\n--- 프로젝트 "${project.name}" (ID: ${project.id}) ---`);
 
-      // 프로젝트 문서에 저장된 캐시 값 사용
-      const totalTasks = project.totalTasks || 0;
-      const completedTasks = project.completedTasks || 0;
-      const totalTodos = project.totalTodos || 0;
-      const completedTodos = project.completedTodos || 0;
+      // 해당 프로젝트의 필터링된 작업들
+      const projectTasks = projectTasksMap.get(project.id) || [];
 
-      console.log(`  캐시된 작업: ${completedTasks}/${totalTasks}`);
-      console.log(`  캐시된 할일: ${completedTodos}/${totalTodos}`);
+      // 완료된 작업 수
+      const completedTasks = projectTasks.filter(t => t.status === 'completed').length;
+      const totalTasks = projectTasks.length;
+
+      // 할일 통계 계산
+      let totalTodos = 0;
+      let completedTodos = 0;
+      const startDateStr = formatDateString(startDate);
+      const endDateStr = formatDateString(endDate);
+
+      projectTasks.forEach(task => {
+        task.todos.forEach(todo => {
+          // 완료된 할일
+          if (todo.status === 'completed' && todo.completedDate) {
+            const todoCompletedDateStr = todo.completedDate.split('T')[0];
+            if (todoCompletedDateStr >= startDateStr && todoCompletedDateStr <= endDateStr) {
+              totalTodos++;
+              completedTodos++;
+            }
+          }
+          // 진행 중인 할일
+          else if (todo.status === 'in_progress' && todo.startDate) {
+            const todoStartDateStr = todo.startDate.split('T')[0];
+            if (todoStartDateStr >= startDateStr && todoStartDateStr <= endDateStr) {
+              totalTodos++;
+            }
+          }
+        });
+      });
+
+      console.log(`  기간 내 작업: ${completedTasks}/${totalTasks}`);
+      console.log(`  기간 내 할일: ${completedTodos}/${totalTodos}`);
 
       // 진행률 계산
       const taskProgress =
@@ -150,11 +213,16 @@ export default function ReportsPage() {
       const todoProgress =
         totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
 
-      // 프로젝트 진행률은 프로젝트 문서에 저장된 값 사용
-      const overallProgress = project.progress || 0;
+      // 전체 진행률 계산
+      const totalItems = totalTasks + totalTodos;
+      const completedItems = completedTasks + completedTodos;
+      const overallProgress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
-      // 프로젝트 시작일부터 오늘까지의 진행 히스토리 계산
-      const progressHistory = calculateProgressHistory(project);
+      // 선택한 기간의 간단한 진행 히스토리 (시작: 0%, 종료: 현재 진행률)
+      const progressHistory = [
+        { date: formatDateString(startDate), progress: 0 },
+        { date: formatDateString(endDate), progress: overallProgress }
+      ];
 
       return {
         id: project.id,
@@ -170,65 +238,17 @@ export default function ReportsPage() {
         progressHistory,
       };
     });
-  }, [filteredProjects]);
+  }, [filteredProjects, filteredTasks, projectTasksMap, startDate, endDate]);
 
-  // 진행 히스토리 계산 함수 (시작일~종료일 범위, 오늘 이후는 null)
-  function calculateProgressHistory(project: Project) {
-    const history: { date: string; progress: number | null }[] = [];
-    const start = new Date(project.startDate);
-    const end = new Date(project.endDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize to start of day
-
-    // 시작일부터 종료일까지의 전체 기간
-    const totalDays = Math.floor(
-      (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    const daysUntilToday = Math.floor(
-      (today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-    );
-
-    // 샘플링 개수 결정 (최소 3개, 최대 10개)
-    const sampleCount = Math.min(10, Math.max(3, Math.floor(totalDays / 7)));
-
-    // 현재 진행률
-    const currentProgress = project.progress || 0;
-
-    for (let i = 0; i <= sampleCount; i++) {
-      const dayOffset = Math.floor((totalDays / sampleCount) * i);
-      const sampleDate = new Date(
-        start.getTime() + dayOffset * 24 * 60 * 60 * 1000
-      );
-      sampleDate.setHours(0, 0, 0, 0);
-      const dateStr = sampleDate.toISOString().split("T")[0];
-
-      // 오늘 이후의 날짜는 null로 설정 (그래프가 끊어짐)
-      if (sampleDate > today) {
-        history.push({ date: dateStr, progress: null });
-      } else {
-        // 시작일부터 현재까지 선형 증가로 근사
-        const progressAtPoint =
-          dayOffset <= daysUntilToday
-            ? Math.round(
-                (currentProgress / Math.max(1, daysUntilToday)) * dayOffset
-              )
-            : currentProgress;
-        history.push({ date: dateStr, progress: progressAtPoint });
-      }
-    }
-
-    return history;
-  }
-
-  // 전체 통계 계산 - 프로젝트 캐시 값 합산
+  // 전체 통계 계산 - 필터링된 작업 기반
   const totalStats = useMemo(() => {
-    const stats = filteredProjects.reduce(
-      (acc, project) => {
+    const stats = projectReports.reduce(
+      (acc, report) => {
         return {
-          totalTasks: acc.totalTasks + (project.totalTasks || 0),
-          completedTasks: acc.completedTasks + (project.completedTasks || 0),
-          totalTodos: acc.totalTodos + (project.totalTodos || 0),
-          completedTodos: acc.completedTodos + (project.completedTodos || 0),
+          totalTasks: acc.totalTasks + report.totalTasks,
+          completedTasks: acc.completedTasks + report.completedTasks,
+          totalTodos: acc.totalTodos + report.totalTodos,
+          completedTodos: acc.completedTodos + report.completedTodos,
         };
       },
       { totalTasks: 0, completedTasks: 0, totalTodos: 0, completedTodos: 0 }
@@ -243,7 +263,7 @@ export default function ReportsPage() {
         : 0;
 
     return { ...stats, completionRate };
-  }, [filteredProjects]);
+  }, [projectReports]);
 
   const loading = authLoading || dataLoading;
 
@@ -273,62 +293,21 @@ export default function ReportsPage() {
     <div className={styles.container}>
       <Header
         title="업무 보고서"
-        dateRange
         showExport
-        onDateRangeChange={handleDateRangeChange}
       />
 
       <div className={styles.content}>
         <div className={`${styles.wrapper} ${styles.space}`}>
-          {/* 필터 및 기간 선택 */}
+          {/* 기간 선택 */}
           <div className={styles.filterSection}>
-            {/* 카테고리 필터 */}
-            <div className={styles.categoryFilter}>
-              <button
-                onClick={() => setSelectedCategory("all")}
-                className={`${styles.filterButton} ${
-                  selectedCategory === "all" ? styles.filterButtonActive : ""
-                }`}
-              >
-                전체
-              </button>
-              <button
-                onClick={() => setSelectedCategory("personal")}
-                className={`${styles.filterButton} ${
-                  selectedCategory === "personal"
-                    ? styles.filterButtonActive
-                    : ""
-                }`}
-              >
-                개인
-              </button>
-              <button
-                onClick={() => setSelectedCategory("work")}
-                className={`${styles.filterButton} ${
-                  selectedCategory === "work" ? styles.filterButtonActive : ""
-                }`}
-              >
-                업무
-              </button>
-              {/* 통계 업데이트 버튼 (개발용) */}
-              <button
-                onClick={handleUpdateStats}
-                disabled={isUpdating}
-                className={styles.updateStatsButton}
-                title="모든 프로젝트의 할일 통계를 업데이트합니다"
-              >
-                {isUpdating ? "업데이트 중..." : "📊 통계 업데이트"}
-              </button>
-            </div>
-
-            {/* 기간 선택 토글 및 DatePicker */}
             <div className={styles.periodSelector}>
               <div className={styles.periodToggle}>
                 <button
                   onClick={() => {
                     setPeriodMode("today");
-                    setStartDate(todayString);
-                    setEndDate(todayString);
+                    const today = new Date();
+                    setStartDate(today);
+                    setEndDate(today);
                   }}
                   className={`${styles.toggleButton} ${
                     periodMode === "today" ? styles.toggleButtonActive : ""
@@ -337,7 +316,10 @@ export default function ReportsPage() {
                   오늘
                 </button>
                 <button
-                  onClick={() => setPeriodMode("custom")}
+                  onClick={() => {
+                    setPeriodMode("custom");
+                    setShowDatePicker(true);
+                  }}
                   className={`${styles.toggleButton} ${
                     periodMode === "custom" ? styles.toggleButtonActive : ""
                   }`}
@@ -346,42 +328,54 @@ export default function ReportsPage() {
                 </button>
               </div>
 
-              {periodMode === "custom" && (
-                <DatePicker
-                  selectsRange={true}
-                  startDate={startDate ? new Date(startDate) : null}
-                  endDate={endDate ? new Date(endDate) : null}
-                  onChange={update => {
-                    const [start, end] = update;
-                    setStartDate(
-                      start
-                        ? new Date(
-                            start.getTime() - start.getTimezoneOffset() * 60000
-                          )
-                            .toISOString()
-                            .split("T")[0]
-                        : todayString
-                    );
-                    setEndDate(
-                      end
-                        ? new Date(
-                            end.getTime() - end.getTimezoneOffset() * 60000
-                          )
-                            .toISOString()
-                            .split("T")[0]
-                        : todayString
-                    );
-                  }}
-                  customInput={
-                    <CustomDateInput
-                      value={
-                        startDate ? `${startDate} - ${endDate || ""}` : ""
+              {/* 선택된 날짜 표시 */}
+              <div className={styles.dateDisplay}>
+                {periodMode === "today"
+                  ? formatDisplayDate(new Date())
+                  : `${formatDisplayDate(startDate)} ~ ${formatDisplayDate(endDate)}`}
+              </div>
+
+              {/* DatePicker - 기간 선택 모드이고 showDatePicker가 true일 때만 표시 */}
+              {periodMode === "custom" && showDatePicker && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1000, marginTop: '0.5rem' }}>
+                  <DatePicker
+                    ref={datePickerRef}
+                    selectsRange={true}
+                    startDate={tempStartDate || startDate}
+                    endDate={tempEndDate}
+                    onChange={(update) => {
+                      const [start, end] = update as [Date | null, Date | null];
+
+                      // 임시 날짜 저장
+                      setTempStartDate(start);
+                      setTempEndDate(end);
+
+                      // 시작일과 종료일이 모두 선택되었을 때만 실제로 적용
+                      if (start && end) {
+                        // 시작일은 00:00:00으로 설정
+                        const startOfDay = new Date(start);
+                        startOfDay.setHours(0, 0, 0, 0);
+
+                        // 종료일은 23:59:59로 설정
+                        const endOfDay = new Date(end);
+                        endOfDay.setHours(23, 59, 59, 999);
+
+                        setStartDate(startOfDay);
+                        setEndDate(endOfDay);
+
+                        // DatePicker 자동 닫기
+                        setTimeout(() => {
+                          setShowDatePicker(false);
+                          setTempStartDate(null);
+                          setTempEndDate(null);
+                        }, 100);
                       }
-                    />
-                  }
-                  dateFormat="yyyy-MM-dd"
-                  locale={ko}
-                />
+                    }}
+                    inline
+                    dateFormat="yyyy-MM-dd"
+                    locale={ko}
+                  />
+                </div>
               )}
             </div>
           </div>
@@ -391,7 +385,7 @@ export default function ReportsPage() {
             <h2 className={styles.cardTitle}>
               {periodMode === "today"
                 ? dateString
-                : `${startDate} ~ ${endDate}`}
+                : `${formatDisplayDate(startDate)} ~ ${formatDisplayDate(endDate)}`}
             </h2>
             <div className={styles.completionHeader}>
               <div className={styles.completionInfo}>
