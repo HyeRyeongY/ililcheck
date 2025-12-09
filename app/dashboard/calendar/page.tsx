@@ -9,6 +9,8 @@ import { fetchProjects, fetchTasksByProject } from '@/lib/api';
 import { Project, Task, Todo } from '@/lib/types';
 import styles from './page.module.css';
 
+type ViewMode = 'calendar' | 'gantt';
+
 export default function CalendarPage() {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -16,6 +18,7 @@ export default function CalendarPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>('calendar');
 
   useEffect(() => {
     async function loadData() {
@@ -100,13 +103,29 @@ export default function CalendarPage() {
       <div className={styles.header}>
         <div className={styles.headerContent}>
           <h1 className={styles.title}>달력</h1>
+          {/* 탭 */}
+          <div className={styles.tabs}>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`${styles.tab} ${viewMode === 'calendar' ? styles.tabActive : ''}`}
+            >
+              일별 작업
+            </button>
+            <button
+              onClick={() => setViewMode('gantt')}
+              className={`${styles.tab} ${viewMode === 'gantt' ? styles.tabActive : ''}`}
+            >
+              프로젝트 타임라인
+            </button>
+          </div>
         </div>
       </div>
 
       <div className={styles.content}>
-        <div className={styles.mainGrid}>
-          {/* 달력 */}
-          <div className={styles.calendarContainer}>
+        {viewMode === 'calendar' ? (
+          <div className={styles.mainGrid}>
+            {/* 달력 */}
+            <div className={styles.calendarContainer}>
             {/* 달력 헤더 */}
             <div className={styles.calendarHeader}>
               <div className={styles.calendarControls}>
@@ -247,7 +266,7 @@ export default function CalendarPage() {
                 ) : (
                   selectedDateTodos.map((todo) => {
                     const project = projects.find(p => p.id === todo.projectId);
-                    
+
                     return (
                       <div key={todo.id} className={styles.projectItem}>
                         <div className={styles.projectItemHeader}>
@@ -260,7 +279,7 @@ export default function CalendarPage() {
                                 {project && (
                                   <>
                                     <span className={styles.todoDivider}>•</span>
-                                    <span 
+                                    <span
                                       className={styles.todoProjectName}
                                       style={{ color: project.color }}
                                     >
@@ -280,6 +299,130 @@ export default function CalendarPage() {
             </div>
           </div>
         </div>
+        ) : (
+          <div className={styles.ganttContainer}>
+            <div className={styles.ganttContent}>
+              <h2 className={styles.ganttTitle}>프로젝트 타임라인</h2>
+
+              {projects.length === 0 ? (
+                <p className={styles.emptyState}>프로젝트가 없습니다.</p>
+              ) : (
+                <div className={styles.ganttList}>
+                  {projects.map((project) => {
+                    const projectTasks = allTasks.filter(task => task.projectId === project.id);
+
+                    // 프로젝트의 시작일과 종료일 계산
+                    let projectStart: Date | null = null;
+                    let projectEnd: Date | null = null;
+
+                    projectTasks.forEach(task => {
+                      task.todos.forEach(todo => {
+                        if (todo.dueDate) {
+                          const todoDate = new Date(todo.dueDate);
+                          if (!projectStart || todoDate < projectStart) {
+                            projectStart = todoDate;
+                          }
+                          if (!projectEnd || todoDate > projectEnd) {
+                            projectEnd = todoDate;
+                          }
+                        }
+                      });
+                    });
+
+                    return (
+                      <div key={project.id} className={styles.ganttProject}>
+                        <div className={styles.ganttProjectHeader}>
+                          <div className={styles.ganttProjectInfo}>
+                            <div
+                              className={styles.ganttProjectColorDot}
+                              style={{ backgroundColor: project.color }}
+                            />
+                            <h3 className={styles.ganttProjectName}>{project.name}</h3>
+                          </div>
+                          <div className={styles.ganttProjectDates}>
+                            {projectStart && projectEnd ? (
+                              <>
+                                <span className={styles.ganttDate}>
+                                  {format(projectStart, 'yyyy.MM.dd')}
+                                </span>
+                                <span className={styles.ganttDateSeparator}>~</span>
+                                <span className={styles.ganttDate}>
+                                  {format(projectEnd, 'yyyy.MM.dd')}
+                                </span>
+                              </>
+                            ) : (
+                              <span className={styles.ganttNoDate}>날짜 미정</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* 프로젝트의 작업 목록 */}
+                        <div className={styles.ganttTasks}>
+                          {projectTasks.map((task) => {
+                            // 작업의 시작일과 종료일 계산
+                            let taskStart: Date | null = null;
+                            let taskEnd: Date | null = null;
+
+                            task.todos.forEach(todo => {
+                              if (todo.dueDate) {
+                                const todoDate = new Date(todo.dueDate);
+                                if (!taskStart || todoDate < taskStart) {
+                                  taskStart = todoDate;
+                                }
+                                if (!taskEnd || todoDate > taskEnd) {
+                                  taskEnd = todoDate;
+                                }
+                              }
+                            });
+
+                            return (
+                              <div key={task.id} className={styles.ganttTask}>
+                                <div className={styles.ganttTaskHeader}>
+                                  <span className={styles.ganttTaskTitle}>{task.title}</span>
+                                  <div className={styles.ganttTaskDates}>
+                                    {taskStart && taskEnd ? (
+                                      <>
+                                        <span className={styles.ganttTaskDate}>
+                                          {format(taskStart, 'MM.dd')}
+                                        </span>
+                                        <span className={styles.ganttDateSeparator}>~</span>
+                                        <span className={styles.ganttTaskDate}>
+                                          {format(taskEnd, 'MM.dd')}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <span className={styles.ganttNoDate}>날짜 미정</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* 할일 목록 */}
+                                <div className={styles.ganttTodos}>
+                                  {task.todos
+                                    .filter(todo => todo.dueDate)
+                                    .sort((a, b) => (a.dueDate! < b.dueDate! ? -1 : 1))
+                                    .map((todo) => (
+                                      <div key={todo.id} className={styles.ganttTodo}>
+                                        <div className={`${styles.ganttTodoStatus} ${styles[todo.status]}`} />
+                                        <span className={styles.ganttTodoTitle}>{todo.title}</span>
+                                        <span className={styles.ganttTodoDate}>
+                                          {format(new Date(todo.dueDate!), 'MM.dd')}
+                                        </span>
+                                      </div>
+                                    ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

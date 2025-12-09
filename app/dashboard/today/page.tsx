@@ -385,8 +385,9 @@ export default function TodayPage() {
 
       {/* 콘텐츠 영역 */}
       <div className={styles.content}>
-        {/* 진행률 */}
-        <div className={styles.progressSection}>
+        <div className={styles.contentInner}>
+          {/* 진행률 */}
+          <div className={styles.progressSection}>
           <div className={styles.progressInfo}>
             <h3 className={styles.progressTitle}>완료율</h3>
             <span className={styles.progressText}>
@@ -793,6 +794,7 @@ export default function TodayPage() {
               </div>
             ))
           )}
+        </div>
         </div>
       </div>
     </div>

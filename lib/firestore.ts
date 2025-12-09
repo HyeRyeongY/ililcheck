@@ -14,13 +14,14 @@ import {
   deleteField,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Task, TaskGroup, Project, Todo } from './types';
+import { Task, TaskGroup, Project, Todo, Issue } from './types';
 
 // 컬렉션 이름
 const TASKS_COLLECTION = 'tasks';
 const TODOS_COLLECTION = 'todos';
 const TASK_GROUPS_COLLECTION = 'taskGroups';
 const PROJECTS_COLLECTION = 'projects';
+const ISSUES_COLLECTION = 'issues';
 
 /**
  * 프로젝트 통계 재계산 및 업데이트
@@ -901,5 +902,104 @@ export async function fetchTodosByUser(userId: string, date?: string): Promise<T
   } catch (error) {
     console.error('사용자 할일 조회 실패:', error);
     return [];
+  }
+}
+
+/**
+ * 프로젝트의 이슈 가져오기
+ */
+export async function fetchIssuesByProject(userId: string, projectId: string): Promise<Issue[]> {
+  try {
+    const issuesRef = collection(db, ISSUES_COLLECTION);
+    const q = query(
+      issuesRef,
+      where('userId', '==', userId),
+      where('projectId', '==', projectId),
+      orderBy('createdAt', 'desc')
+    );
+
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        projectId: data.projectId,
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        priority: data.priority,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        resolvedAt: data.resolvedAt,
+      };
+    });
+  } catch (error) {
+    console.error('이슈 조회 실패:', error);
+    return [];
+  }
+}
+
+/**
+ * 새 이슈 생성
+ */
+export async function createIssue(userId: string, issue: Omit<Issue, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> {
+  try {
+    console.log('Firestore createIssue 호출:', { userId, issue });
+    const issuesRef = collection(db, ISSUES_COLLECTION);
+    const docRef = await addDoc(issuesRef, {
+      ...issue,
+      userId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    console.log('Firestore 이슈 생성 성공:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error('이슈 생성 실패:', error);
+    return null;
+  }
+}
+
+/**
+ * 이슈 업데이트
+ */
+export async function updateIssue(issueId: string, updates: Partial<Issue>): Promise<boolean> {
+  try {
+    const issueRef = doc(db, ISSUES_COLLECTION, issueId);
+
+    // id 필드 제외
+    const updateData = { ...updates };
+    delete updateData.id;
+
+    // resolvedAt 처리
+    if (updates.status === 'resolved' && !updates.resolvedAt) {
+      updateData.resolvedAt = new Date().toISOString();
+    }
+
+    await updateDoc(issueRef, {
+      ...updateData,
+      updatedAt: serverTimestamp(),
+    });
+
+    return true;
+  } catch (error) {
+    console.error('이슈 업데이트 실패:', error);
+    return false;
+  }
+}
+
+/**
+ * 이슈 삭제
+ */
+export async function deleteIssue(issueId: string): Promise<boolean> {
+  try {
+    const issueRef = doc(db, ISSUES_COLLECTION, issueId);
+    await deleteDoc(issueRef);
+    return true;
+  } catch (error) {
+    console.error('이슈 삭제 실패:', error);
+    return false;
   }
 }

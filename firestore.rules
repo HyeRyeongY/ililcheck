@@ -49,6 +49,13 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
     }
 
+    // 이슈 규칙
+    match /issues/{issueId} {
+      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow write: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
     // 사용자 정보 컬렉션 규칙
     match /users/{userId} {
       // 모든 인증된 사용자가 읽을 수 있음 (관리자 페이지 사용자 목록 조회용)

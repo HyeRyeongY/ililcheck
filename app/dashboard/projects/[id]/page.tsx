@@ -15,8 +15,12 @@ import {
   updateProject,
   updateTask,
   updateTodo,
+  fetchIssuesByProject,
+  createIssue,
+  updateIssue,
+  deleteIssue,
 } from "@/lib/api";
-import { Project, ProjectCategory, Task, Todo } from "@/lib/types";
+import { Project, ProjectCategory, Task, Todo, Issue } from "@/lib/types";
 import { ko } from "date-fns/locale/ko";
 import {
   Check,
@@ -28,6 +32,7 @@ import {
   Plus,
   Trash2,
   X,
+  AlertCircle,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -72,6 +77,18 @@ export default function ProjectDetailPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // 이슈 관련 상태
+  const [showIssuePanel, setShowIssuePanel] = useState(false);
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [isAddingIssue, setIsAddingIssue] = useState(false);
+  const [newIssue, setNewIssue] = useState({
+    title: "",
+    description: "",
+    priority: "medium" as Issue['priority'],
+    status: "open" as Issue['status'],
+  });
+  const [editingIssueId, setEditingIssueId] = useState<string | null>(null);
 
   // 작업 편집 상태
   const [isAddingTask, setIsAddingTask] = useState(false);
@@ -215,6 +232,15 @@ export default function ProjectDetailPage() {
         } catch (error) {
           console.error("작업 목록 로드 실패:", error);
           setTasks([]);
+        }
+
+        // 이슈 목록 불러오기
+        try {
+          const projectIssues = await fetchIssuesByProject(params.id as string);
+          setIssues(projectIssues);
+        } catch (error) {
+          console.error("이슈 목록 로드 실패:", error);
+          setIssues([]);
         }
       } catch (error) {
         console.error("데이터 로드 실패:", error);
@@ -959,6 +985,114 @@ export default function ProjectDetailPage() {
     });
   };
 
+  // 이슈 핸들러 함수들
+  const handleAddIssue = async () => {
+    if (!newIssue.title.trim() || !params.id) {
+      console.log("이슈 추가 조건 미달:", { title: newIssue.title, projectId: params.id });
+      return;
+    }
+
+    console.log("이슈 생성 시도:", {
+      projectId: params.id,
+      title: newIssue.title,
+      description: newIssue.description,
+      status: newIssue.status,
+      priority: newIssue.priority,
+    });
+
+    try {
+      const issueId = await createIssue({
+        projectId: params.id as string,
+        title: newIssue.title,
+        description: newIssue.description,
+        status: newIssue.status,
+        priority: newIssue.priority,
+      });
+
+      console.log("이슈 생성 결과:", issueId);
+
+      if (!issueId) {
+        console.error("이슈 생성 실패: ID가 반환되지 않았습니다.");
+        alert("이슈 생성에 실패했습니다. 다시 시도해주세요.");
+        return;
+      }
+
+      // 이슈 목록 새로고침
+      const projectIssues = await fetchIssuesByProject(params.id as string);
+      console.log("이슈 목록 새로고침:", projectIssues);
+      setIssues(projectIssues);
+
+      // 폼 초기화
+      setNewIssue({
+        title: "",
+        description: "",
+        priority: "medium",
+        status: "open",
+      });
+      setIsAddingIssue(false);
+    } catch (error) {
+      console.error("이슈 생성 실패:", error);
+      alert(`이슈 생성 중 오류가 발생했습니다: ${error}`);
+    }
+  };
+
+  const handleUpdateIssue = async (issueId: string, updates: Partial<Issue>) => {
+    try {
+      await updateIssue(issueId, updates);
+
+      // 이슈 목록 새로고침
+      if (params.id) {
+        const projectIssues = await fetchIssuesByProject(params.id as string);
+        setIssues(projectIssues);
+      }
+
+      setEditingIssueId(null);
+    } catch (error) {
+      console.error("이슈 업데이트 실패:", error);
+    }
+  };
+
+  const handleDeleteIssue = async (issueId: string, issueTitle: string) => {
+    setDialog({
+      isOpen: true,
+      title: "이슈 삭제",
+      message: `"${issueTitle}" 이슈를 삭제하시겠습니까?`,
+      type: "error",
+      onConfirm: async () => {
+        try {
+          await deleteIssue(issueId);
+
+          // 이슈 목록 새로고침
+          if (params.id) {
+            const projectIssues = await fetchIssuesByProject(params.id as string);
+            setIssues(projectIssues);
+          }
+
+          setDialog({
+            isOpen: true,
+            title: "삭제 완료",
+            message: "이슈가 성공적으로 삭제되었습니다.",
+            type: "success",
+            onConfirm: () => {
+              setDialog(prev => ({ ...prev, isOpen: false }));
+            },
+          });
+        } catch (error) {
+          console.error("이슈 삭제 실패:", error);
+          setDialog({
+            isOpen: true,
+            title: "삭제 실패",
+            message: "이슈 삭제에 실패했습니다. 다시 시도해주세요.",
+            type: "error",
+            onConfirm: () => {
+              setDialog(prev => ({ ...prev, isOpen: false }));
+            },
+          });
+        }
+      },
+    });
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -1079,6 +1213,15 @@ export default function ProjectDetailPage() {
               </>
             ) : (
               <>
+                <button
+                  onClick={() => setShowIssuePanel(!showIssuePanel)}
+                  className={`${styles.issueButton} ${
+                    showIssuePanel ? styles.issueButtonActive : ""
+                  }`}
+                >
+                  <AlertCircle className="w-4 h-4" />
+                  이슈사항 ({issues.length})
+                </button>
                 {isHeaderExpanded && (
                   <>
                     <button
@@ -1190,8 +1333,11 @@ export default function ProjectDetailPage() {
         )}
       </div>
 
-      {/* 작업 목록 */}
-      <div className={styles.card}>
+      {/* 콘텐츠 영역 */}
+      <div className={styles.content}>
+        <div className={styles.contentInner}>
+          {/* 작업 목록 */}
+          <div className={styles.card}>
         {/* 프로젝트 진행률 */}
         <div className={styles.progressSection}>
           <div className={styles.progressInfo}>
@@ -1655,6 +1801,144 @@ export default function ProjectDetailPage() {
           </div>
         </div>
       )}
+
+      {/* 이슈 패널 */}
+      <div className={`${styles.issuePanel} ${showIssuePanel ? styles.issuePanelOpen : ''}`}>
+        <div className={styles.issuePanelHeader}>
+          <div className={styles.issuePanelTitle}>
+            <AlertCircle className="w-5 h-5" />
+            <h2>이슈사항</h2>
+            <span className={styles.issueCount}>{issues.length}</span>
+          </div>
+          <button
+            onClick={() => setShowIssuePanel(false)}
+            className={styles.issuePanelCloseButton}
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className={styles.issuePanelContent}>
+          {!isAddingIssue && (
+            <button
+              onClick={() => setIsAddingIssue(true)}
+              className={styles.addIssueButton}
+            >
+              <Plus className="w-4 h-4" />
+              새 이슈 추가
+            </button>
+          )}
+
+          {isAddingIssue && (
+            <div className={styles.issueForm}>
+              <input
+                type="text"
+                placeholder="이슈 제목"
+                value={newIssue.title}
+                onChange={e => setNewIssue({ ...newIssue, title: e.target.value })}
+                className={styles.issueFormInput}
+                autoFocus
+              />
+              <textarea
+                placeholder="이슈 설명"
+                value={newIssue.description}
+                onChange={e => setNewIssue({ ...newIssue, description: e.target.value })}
+                className={styles.issueFormTextarea}
+                rows={4}
+              />
+              <div className={styles.issueFormRow}>
+                <select
+                  value={newIssue.priority}
+                  onChange={e => setNewIssue({ ...newIssue, priority: e.target.value as Issue['priority'] })}
+                  className={styles.issueFormSelect}
+                >
+                  <option value="low">낮음</option>
+                  <option value="medium">보통</option>
+                  <option value="high">높음</option>
+                  <option value="critical">긴급</option>
+                </select>
+              </div>
+              <div className={styles.issueFormActions}>
+                <button
+                  onClick={() => {
+                    setIsAddingIssue(false);
+                    setNewIssue({ title: "", description: "", priority: "medium", status: "open" });
+                  }}
+                  className={styles.issueCancelButton}
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleAddIssue}
+                  className={styles.issueSaveButton}
+                  disabled={!newIssue.title.trim()}
+                >
+                  추가
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className={styles.issuesList}>
+            {issues.length === 0 && !isAddingIssue && (
+              <div className={styles.emptyIssues}>
+                <AlertCircle className="w-12 h-12 text-gray-300" />
+                <p>아직 이슈가 없습니다</p>
+              </div>
+            )}
+
+            {issues.map(issue => (
+              <div key={issue.id} className={styles.issueItem}>
+                <div className={styles.issueItemHeader}>
+                  <div className={styles.issueItemTitle}>
+                    <div
+                      className={`${styles.issuePriority} ${styles[`issuePriority${issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1)}`]}`}
+                    />
+                    <span>{issue.title}</span>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteIssue(issue.id, issue.title)}
+                    className={styles.issueDeleteButton}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                {issue.description && (
+                  <p className={styles.issueDescription}>{issue.description}</p>
+                )}
+                <div className={styles.issueItemFooter}>
+                  <select
+                    value={issue.status}
+                    onChange={e => handleUpdateIssue(issue.id, { status: e.target.value as Issue['status'] })}
+                    className={`${styles.issueStatusSelect} ${styles[`issueStatus${issue.status.charAt(0).toUpperCase() + issue.status.slice(1).replace('_', '')}`]}`}
+                  >
+                    <option value="open">열림</option>
+                    <option value="in_progress">진행 중</option>
+                    <option value="resolved">해결됨</option>
+                    <option value="closed">닫힘</option>
+                  </select>
+                  <span className={styles.issueDate}>
+                    {new Date(issue.createdAt).toLocaleDateString('ko-KR', {
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 이슈 패널 오버레이 */}
+      {showIssuePanel && (
+        <div
+          className={styles.issuePanelOverlay}
+          onClick={() => setShowIssuePanel(false)}
+        />
+      )}
+        </div>
+      </div>
     </div>
   );
 }

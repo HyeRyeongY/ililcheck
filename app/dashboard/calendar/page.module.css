@@ -440,3 +440,211 @@
   font-size: 1.125rem;
   color: #6b7280;
 }
+
+/* 탭 스타일 */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  background-color: transparent;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.tabActive {
+  color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.tabActive:hover {
+  background-color: #dbeafe;
+}
+
+/* 간트 차트 스타일 */
+.ganttContainer {
+  max-width: 80rem;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.ganttContent {
+  background-color: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  padding: 1.5rem;
+}
+
+.ganttTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+.ganttList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ganttProject {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  background-color: #f9fafb;
+}
+
+.ganttProjectHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ganttProjectInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ganttProjectColorDot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ganttProjectName {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.ganttProjectDates {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.ganttDate {
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.ganttDateSeparator {
+  color: #9ca3af;
+}
+
+.ganttNoDate {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.ganttTasks {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ganttTask {
+  background-color: white;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+}
+
+.ganttTaskHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.ganttTaskTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.ganttTaskDates {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.813rem;
+}
+
+.ganttTaskDate {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.ganttTodos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 1rem;
+}
+
+.ganttTodo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+  border-radius: 0.25rem;
+}
+
+.ganttTodoStatus {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ganttTodoStatus.todo {
+  background-color: #d1d5db;
+}
+
+.ganttTodoStatus.in_progress {
+  background-color: #3b82f6;
+}
+
+.ganttTodoStatus.completed {
+  background-color: #22c55e;
+}
+
+.ganttTodoStatus.on_hold {
+  background-color: #f59e0b;
+}
+
+.ganttTodoStatus.postponed {
+  background-color: #ef4444;
+}
+
+.ganttTodoTitle {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.ganttTodoDate {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}

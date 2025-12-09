@@ -90,3 +90,15 @@ export interface TaskStats {
   completed: number;
   onHold: number;
 }
+
+export interface Issue {
+  id: string;
+  projectId: string;
+  title: string;
+  description: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+}

@@ -1,4 +1,4 @@
-import { Task, Project, TaskGroup, Todo } from './types';
+import { Task, Project, TaskGroup, Todo, Issue } from './types';
 import {
   fetchTasks as fetchTasksFromFirestore,
   fetchTasksByProject as fetchTasksByProjectFromFirestore,
@@ -18,6 +18,10 @@ import {
   fetchTodosByUser,
   fetchTodosByTask,
   updateProjectStats as updateProjectStatsFromFirestore,
+  fetchIssuesByProject as fetchIssuesByProjectFromFirestore,
+  createIssue as createIssueInFirestore,
+  updateIssue as updateIssueInFirestore,
+  deleteIssue as deleteIssueFromFirestore,
 } from './firestore';
 import { auth } from './firebase';
 
@@ -177,4 +181,34 @@ export async function updateAllProjectStats(): Promise<void> {
   }
 
   console.log('✅ 모든 프로젝트 통계 업데이트 완료');
+}
+
+/**
+ * 프로젝트의 이슈 가져오기
+ */
+export async function fetchIssuesByProject(projectId: string): Promise<Issue[]> {
+  const userId = getCurrentUserId();
+  return await fetchIssuesByProjectFromFirestore(userId, projectId);
+}
+
+/**
+ * 새 이슈 생성
+ */
+export async function createIssue(issue: Omit<Issue, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> {
+  const userId = getCurrentUserId();
+  return await createIssueInFirestore(userId, issue);
+}
+
+/**
+ * 이슈 업데이트
+ */
+export async function updateIssue(issueId: string, updates: Partial<Issue>): Promise<boolean> {
+  return await updateIssueInFirestore(issueId, updates);
+}
+
+/**
+ * 이슈 삭제
+ */
+export async function deleteIssue(issueId: string): Promise<boolean> {
+  return await deleteIssueFromFirestore(issueId);
 }
