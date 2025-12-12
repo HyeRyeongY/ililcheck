@@ -1,8 +1,8 @@
 "use client";
 
 import { signInWithEmail, signInWithGoogle } from "@/lib/auth";
-import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 
@@ -19,7 +19,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const rememberedEmail = localStorage.getItem("rememberedEmail");
       if (rememberedEmail) {
         setEmail(rememberedEmail);
@@ -72,9 +72,7 @@ export default function LoginPage() {
       </div>
       <div className={styles.card}>
         <h1 className={styles.title}>ililcheck</h1>
-        <p className={styles.subtitle}>
-          일 체크, 일일 체크, 일일일 체크, 일일일일 체크...
-        </p>
+        <p className={styles.subtitle}>꾸준한 기록과 분석이 '내 일'을 바꾼다</p>
 
         {error && <div className={styles.error}>{error}</div>}
 
@@ -125,7 +123,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className={styles.divider}>
+        {/* <div className={styles.divider}>
           <span>또는</span>
         </div>
 
@@ -153,7 +151,7 @@ export default function LoginPage() {
             />
           </svg>
           Google로 로그인
-        </button>
+        </button> */}
 
         <p className={styles.signupLink}>
           계정이 없으신가요?{" "}
