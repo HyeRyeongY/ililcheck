@@ -51,6 +51,14 @@ export default function ProgressDots({
   const previewProgress = getPreviewProgress();
   const previewFilledDots = Math.floor(previewProgress / 5);
 
+  // 진행률에 따른 색상 결정
+  const getProgressColor = (currentProgress: number) => {
+    if (currentProgress >= 100) return '#3b82f6'; // 완료 (파란색)
+    if (currentProgress >= 70) return '#22c55e'; // 높은 진행률 (녹색)
+    if (currentProgress >= 40) return '#f59e0b'; // 중간 진행률 (주황색)
+    return '#ef4444'; // 낮은 진행률 (빨간색)
+  };
+
   return (
     <div className={`${styles.container} ${styles[size]}`}>
       <div className={styles.dotsContainer}>
@@ -67,6 +75,11 @@ export default function ProgressDots({
               } ${isHovered ? styles.hovered : ""} ${
                 disabled ? styles.disabled : styles.interactive
               }`}
+              style={
+                isFilled
+                  ? { backgroundColor: getProgressColor(progress) }
+                  : undefined
+              }
               onClick={() => handleDotClick(index)}
               onMouseEnter={() => !disabled && setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}

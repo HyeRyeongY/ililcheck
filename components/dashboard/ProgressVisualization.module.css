@@ -38,11 +38,11 @@
 }
 
 .progressBlock.completed {
-  background-color: #3b82f6;
+  background-color: #60a5fa;
 }
 
 .progressBlock.inProgress {
-  background-color: #60a5fa;
+  background-color: #3b82f6;
 }
 
 .progressBlock.empty {
@@ -70,11 +70,11 @@
 }
 
 .statValue.inProgress {
-  color: #2563eb;
+  color: #16a34a;
 }
 
 .statValue.completed {
-  color: #16a34a;
+  color: #2563eb;
 }
 
 .statValue.onHold {

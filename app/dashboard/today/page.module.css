@@ -149,13 +149,13 @@
 }
 
 .filterInProgress.active {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: #22c55e;
+  border-color: #22c55e;
 }
 
 .filterCompleted.active {
-  background: #22c55e;
-  border-color: #22c55e;
+  background: #3b82f6;
+  border-color: #3b82f6;
 }
 
 .filterOnHold.active {
@@ -430,11 +430,11 @@
 }
 
 .todoStatus.in_progress {
-  background-color: #3b82f6;
+  background-color: #22c55e;
 }
 
 .todoStatus.completed {
-  background-color: #22c55e;
+  background-color: #3b82f6;
 }
 
 .todoStatus.on_hold {

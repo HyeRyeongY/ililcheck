@@ -50,15 +50,15 @@
 }
 
 .dot.filled {
-  background-color: #3b82f6;
+  /* background-color는 인라인 스타일로 설정됨 */
 }
 
 .dot.filled.interactive:hover {
-  background-color: #2563eb;
+  filter: brightness(0.9);
 }
 
 .dot.preview {
-  background-color: #93c5fd !important;
+  opacity: 0.6;
 }
 
 .dot.hovered {
@@ -90,11 +90,11 @@
 @keyframes fillProgress {
   from {
     transform: scale(1);
-    background-color: #e5e7eb;
+    opacity: 0.5;
   }
   to {
-    transform: scale(1.1);
-    background-color: #3b82f6;
+    transform: scale(1);
+    opacity: 1;
   }
 }
 

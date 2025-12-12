@@ -8,13 +8,13 @@
 }
 
 .container.completed {
-  background-color: #f0fdf4;
-  border-color: #bbf7d0;
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
 }
 
 .container.inProgress {
-  background-color: #eff6ff;
-  border-color: #bfdbfe;
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
 }
 
 .container.onHold {
@@ -151,20 +151,20 @@
 
 /* 진행률 완료 상태 */
 .container.completed .progressBlockFilled {
-  background-color: #16a34a;
+  background-color: #3b82f6;
 }
 
 .container.completed .progressBlockFilled:hover {
-  background-color: #15803d;
+  background-color: #2563eb;
 }
 
 /* 진행률 진행중 상태 */
 .container.inProgress .progressBlockFilled {
-  background-color: #3b82f6;
+  background-color: #16a34a;
 }
 
 .container.inProgress .progressBlockFilled:hover {
-  background-color: #2563eb;
+  background-color: #15803d;
 }
 
 /* 퍼센트 표시 */

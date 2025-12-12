@@ -26,8 +26,8 @@ export default function ProgressBar({
   const getProgressColor = () => {
     if (color) return color; // color prop이 있으면 우선 사용
 
-    if (progress >= 100) return '#22c55e'; // 완료 (녹색)
-    if (progress >= 70) return '#3b82f6'; // 높은 진행률 (파란색)
+    if (progress >= 100) return '#3b82f6'; // 완료 (파란색)
+    if (progress >= 70) return '#22c55e'; // 높은 진행률 (녹색)
     if (progress >= 40) return '#f59e0b'; // 중간 진행률 (주황색)
     return '#ef4444'; // 낮은 진행률 (빨간색)
   };
