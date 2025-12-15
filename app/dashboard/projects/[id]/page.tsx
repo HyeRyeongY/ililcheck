@@ -1446,114 +1446,129 @@ export default function ProjectDetailPage() {
                       }
                     }}
                   >
-                    <button
-                      onClick={() => toggleTaskExpansion(task.id)}
-                      className={styles.taskToggle}
-                    >
-                      {expandedTasks.has(task.id) ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
-                    </button>
-                    <div className={styles.taskInfo}>
-                      <div className={styles.taskTitleSection}>
-                        <div
-                          className={`${styles.taskStatusIcon} ${
-                            task.progress === 100
-                              ? styles.completed
-                              : task.progress > 0
-                                ? styles.inProgress
-                                : styles.pending
-                          }`}
+                    <div className={styles.taskHeaderContent}>
+                      {/* 위 행: 토글 + 제목 + 할일추가 */}
+                      <div className={styles.taskHeaderTop}>
+                        <button
+                          onClick={() => toggleTaskExpansion(task.id)}
+                          className={styles.taskToggle}
                         >
-                          {task.progress === 100 ? (
-                            <Check className="w-3 h-3" />
-                          ) : task.progress > 0 ? (
-                            <Clock className="w-3 h-3" />
+                          {expandedTasks.has(task.id) ? (
+                            <ChevronDown className="w-4 h-4" />
                           ) : (
-                            <div className={styles.todoStatusDot} />
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                        </button>
+
+                        <div className={styles.taskTitleSection}>
+                          <div
+                            className={`${styles.taskStatusIcon} ${
+                              task.progress === 100
+                                ? styles.completed
+                                : task.progress > 0
+                                  ? styles.inProgress
+                                  : styles.pending
+                            }`}
+                          >
+                            {task.progress === 100 ? (
+                              <Check className="w-3 h-3" />
+                            ) : task.progress > 0 ? (
+                              <Clock className="w-3 h-3" />
+                            ) : (
+                              <div className={styles.todoStatusDot} />
+                            )}
+                          </div>
+
+                          {editingTaskId === task.id ? (
+                            <input
+                              type="text"
+                              value={editTaskName}
+                              onChange={e => setEditTaskName(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === "Enter") {
+                                  saveEditingTask(task.id);
+                                } else if (e.key === "Escape") {
+                                  cancelEditingTask();
+                                }
+                              }}
+                              onBlur={() => saveEditingTask(task.id)}
+                              className={styles.editTaskInput}
+                              autoFocus
+                            />
+                          ) : (
+                            <div
+                              className={styles.taskTitleWrapper}
+                              onClick={() =>
+                                startEditingTask(task.id, task.title)
+                              }
+                            >
+                              <h4 className={styles.taskTitle}>{task.title}</h4>
+                              <Edit3 className={styles.editIcon} />
+                            </div>
                           )}
                         </div>
 
-                        {editingTaskId === task.id ? (
-                          <input
-                            type="text"
-                            value={editTaskName}
-                            onChange={e => setEditTaskName(e.target.value)}
-                            onKeyDown={e => {
-                              if (e.key === "Enter") {
-                                saveEditingTask(task.id);
-                              } else if (e.key === "Escape") {
-                                cancelEditingTask();
-                              }
-                            }}
-                            onBlur={() => saveEditingTask(task.id)}
-                            className={styles.editTaskInput}
-                            autoFocus
-                          />
-                        ) : (
-                          <div
-                            className={styles.taskTitleWrapper}
-                            onClick={() =>
-                              startEditingTask(task.id, task.title)
+                        <button
+                          onClick={() => {
+                            if (!expandedTasks.has(task.id)) {
+                              toggleTaskExpansion(task.id);
+                            } else {
+                              addNewTodo(task.id);
                             }
-                          >
-                            <h4 className={styles.taskTitle}>{task.title}</h4>
-                            <Edit3 className={styles.editIcon} />
-                          </div>
-                        )}
+                          }}
+                          className={styles.addTodoBtn}
+                          title={
+                            expandedTasks.has(task.id) ? "할일 추가" : "작업 열기"
+                          }
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
                       </div>
 
-                      <div className={styles.taskMeta}>
-                        <div className={styles.taskStatsInfo}>
-                          <div className={styles.taskProgressContainer}>
-                            {task.todos.length === 0 ? (
-                              <ProgressDots
-                                progress={task.progress}
-                                size="sm"
-                                onChange={progress =>
-                                  updateTaskProgress(task.id, progress)
-                                }
-                              />
-                            ) : (
-                              <ProgressBar progress={task.progress} />
-                            )}
-                          </div>
-                          <div className={styles.todoBadge}>
-                            {task.todos.length > 0
-                              ? `할 일 ${
-                                  task.todos.filter(
-                                    t => t.status === "completed"
-                                  ).length
-                                }/${task.todos.length}`
-                              : "할 일 없음"}
-                            &nbsp;•&nbsp;
-                            {task.progress === 100
-                              ? "완료"
-                              : task.progress > 0
-                                ? "진행 중"
-                                : "시작 전"}
-                          </div>
+                      {/* 아래 행: 프로그레스바 + 배지 + 삭제 */}
+                      <div className={styles.taskHeaderBottom}>
+                        <div className={styles.taskProgressContainer}>
+                          {task.todos.length === 0 ? (
+                            <ProgressDots
+                              progress={task.progress}
+                              size="sm"
+                              onChange={progress =>
+                                updateTaskProgress(task.id, progress)
+                              }
+                            />
+                          ) : (
+                            <ProgressBar progress={task.progress} />
+                          )}
                         </div>
+
+                        <div className={styles.todoBadge}>
+                          {task.todos.length > 0
+                            ? `할 일 ${
+                                task.todos.filter(
+                                  t => t.status === "completed"
+                                ).length
+                              }/${task.todos.length}`
+                            : "할 일 없음"}
+                          &nbsp;•&nbsp;
+                          {task.progress === 100
+                            ? "완료"
+                            : task.progress > 0
+                              ? "진행 중"
+                              : "시작 전"}
+                        </div>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTaskDelete(task.id, task.title);
+                          }}
+                          className={styles.deleteTaskBtn}
+                          title="작업 삭제"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-
-                    <button
-                      onClick={() => {
-                        if (!expandedTasks.has(task.id)) {
-                          toggleTaskExpansion(task.id);
-                        } else {
-                          addNewTodo(task.id);
-                        }
-                      }}
-                      className={styles.addTodoBtn}
-                      title={
-                        expandedTasks.has(task.id) ? "할일 추가" : "작업 열기"
-                      }
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
                   </div>
 
                   {/* 확장된 할일 목록 */}

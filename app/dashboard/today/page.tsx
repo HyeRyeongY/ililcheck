@@ -32,12 +32,12 @@ import "react-datepicker/dist/react-datepicker.css";
 import styles from "./page.module.css";
 registerLocale("ko", ko);
 
-type FilterType = "all" | "todo" | "in_progress" | "completed" | "on_hold";
+type FilterType = "todo" | "in_progress" | "completed" | "on_hold";
 
 export default function TodayPage() {
   const { user } = useAuth();
   const { currentCategory } = useCategory();
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [activeFilters, setActiveFilters] = useState<Set<FilterType>>(new Set());
   const [projects, setProjects] = useState<Project[]>([]);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,18 +109,11 @@ export default function TodayPage() {
 
   // 필터링된 할일
   const filteredTodos = allTodos.filter(todo => {
-    switch (activeFilter) {
-      case "todo":
-        return todo.status === "todo";
-      case "in_progress":
-        return todo.status === "in_progress";
-      case "completed":
-        return todo.status === "completed";
-      case "on_hold":
-        return todo.status === "on_hold";
-      default:
-        return true;
-    }
+    // 아무것도 선택되지 않았으면 전체 표시
+    if (activeFilters.size === 0) return true;
+
+    // 선택된 필터 중 하나라도 일치하면 표시
+    return activeFilters.has(todo.status as FilterType);
   });
 
   // 프로젝트별로 작업과 할일을 계층 구조로 그룹화
@@ -134,18 +127,11 @@ export default function TodayPage() {
       // 각 작업의 할일을 필터링
       const tasksWithFilteredTodos = projectTasks.map(task => {
         const taskTodos = task.todos.filter(todo => {
-          switch (activeFilter) {
-            case "todo":
-              return todo.status === "todo";
-            case "in_progress":
-              return todo.status === "in_progress";
-            case "completed":
-              return todo.status === "completed";
-            case "on_hold":
-              return todo.status === "on_hold";
-            default:
-              return true;
-          }
+          // 아무것도 선택되지 않았으면 전체 표시
+          if (activeFilters.size === 0) return true;
+
+          // 선택된 필터 중 하나라도 일치하면 표시
+          return activeFilters.has(todo.status as FilterType);
         });
 
         return {
@@ -402,36 +388,77 @@ export default function TodayPage() {
         {/* 필터 버튼 */}
         <div className={styles.filterButtons}>
           <button
-            className={`${styles.filterButton} ${activeFilter === "all" ? styles.active : ""}`}
-            onClick={() => setActiveFilter("all")}
+            className={`${styles.filterButton} ${activeFilters.size === 4 ? styles.active : ""}`}
+            onClick={() => {
+              // 전체 클릭 시: 모든 필터 선택 또는 모두 해제
+              if (activeFilters.size === 4) {
+                // 이미 모두 선택된 경우 모두 해제
+                setActiveFilters(new Set());
+              } else {
+                // 일부만 선택되거나 아무것도 선택되지 않은 경우 모두 선택
+                setActiveFilters(new Set<FilterType>(["todo", "in_progress", "completed", "on_hold"]));
+              }
+            }}
           >
             <LayoutGrid className="w-4 h-4" />
             전체 {stats.total}
           </button>
           <button
-            className={`${styles.filterButton} ${styles.filterTodo} ${activeFilter === "todo" ? styles.active : ""}`}
-            onClick={() => setActiveFilter("todo")}
+            className={`${styles.filterButton} ${styles.filterTodo} ${activeFilters.has("todo") ? styles.active : ""}`}
+            onClick={() => {
+              const newFilters = new Set(activeFilters);
+              if (newFilters.has("todo")) {
+                newFilters.delete("todo");
+              } else {
+                newFilters.add("todo");
+              }
+              setActiveFilters(newFilters);
+            }}
           >
             <Circle className="w-4 h-4" />
             시작 전 {stats.todo}
           </button>
           <button
-            className={`${styles.filterButton} ${styles.filterInProgress} ${activeFilter === "in_progress" ? styles.active : ""}`}
-            onClick={() => setActiveFilter("in_progress")}
+            className={`${styles.filterButton} ${styles.filterInProgress} ${activeFilters.has("in_progress") ? styles.active : ""}`}
+            onClick={() => {
+              const newFilters = new Set(activeFilters);
+              if (newFilters.has("in_progress")) {
+                newFilters.delete("in_progress");
+              } else {
+                newFilters.add("in_progress");
+              }
+              setActiveFilters(newFilters);
+            }}
           >
             <PlayCircle className="w-4 h-4" />
             진행 중 {stats.inProgress}
           </button>
           <button
-            className={`${styles.filterButton} ${styles.filterCompleted} ${activeFilter === "completed" ? styles.active : ""}`}
-            onClick={() => setActiveFilter("completed")}
+            className={`${styles.filterButton} ${styles.filterCompleted} ${activeFilters.has("completed") ? styles.active : ""}`}
+            onClick={() => {
+              const newFilters = new Set(activeFilters);
+              if (newFilters.has("completed")) {
+                newFilters.delete("completed");
+              } else {
+                newFilters.add("completed");
+              }
+              setActiveFilters(newFilters);
+            }}
           >
             <CheckCircle className="w-4 h-4" />
             완료 {stats.completed}
           </button>
           <button
-            className={`${styles.filterButton} ${styles.filterOnHold} ${activeFilter === "on_hold" ? styles.active : ""}`}
-            onClick={() => setActiveFilter("on_hold")}
+            className={`${styles.filterButton} ${styles.filterOnHold} ${activeFilters.has("on_hold") ? styles.active : ""}`}
+            onClick={() => {
+              const newFilters = new Set(activeFilters);
+              if (newFilters.has("on_hold")) {
+                newFilters.delete("on_hold");
+              } else {
+                newFilters.add("on_hold");
+              }
+              setActiveFilters(newFilters);
+            }}
           >
             <PauseCircle className="w-4 h-4" />
             보류 {stats.onHold}
