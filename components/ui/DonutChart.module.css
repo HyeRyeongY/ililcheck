@@ -30,6 +30,8 @@
   gap: 0.125rem;
   font-weight: 600;
   color: #111827;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .percentage {

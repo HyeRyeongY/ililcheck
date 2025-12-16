@@ -1,9 +1,8 @@
-import React from "react";
 import styles from "./DonutChart.module.css";
 
 interface DonutChartProps {
   progress: number; // 0-100
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   color?: string;
   showLabel?: boolean;
 }
@@ -26,7 +25,8 @@ export default function DonutChart({
 
   // 크기별 설정
   const sizeConfig = {
-    sm: { width: 60, height: 60, strokeWidth: 6, fontSize: "0.75rem" },
+    xs: { width: 24, height: 24, strokeWidth: 8, fontSize: "0.625rem" },
+    sm: { width: 60, height: 60, strokeWidth: 8, fontSize: "0.75rem" },
     md: { width: 80, height: 80, strokeWidth: 8, fontSize: "0.875rem" },
     lg: { width: 100, height: 100, strokeWidth: 10, fontSize: "1rem" },
   };

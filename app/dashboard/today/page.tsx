@@ -38,7 +38,9 @@ type FilterType = "todo" | "in_progress" | "completed" | "on_hold";
 export default function TodayPage() {
   const { user } = useAuth();
   const { currentCategory } = useCategory();
-  const [activeFilters, setActiveFilters] = useState<Set<FilterType>>(new Set());
+  const [activeFilters, setActiveFilters] = useState<Set<FilterType>>(
+    new Set<FilterType>(["todo", "in_progress", "completed", "on_hold"])
+  );
   const [projects, setProjects] = useState<Project[]>([]);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -210,6 +212,24 @@ export default function TodayPage() {
     completed: allTodos.filter(todo => todo.status === "completed").length,
     onHold: allTodos.filter(todo => todo.status === "on_hold").length,
   };
+
+  // 오늘의 작업 통계 계산
+  const todayTasks = allTasks.filter(task => {
+    const categoryProjectIds = new Set(categoryProjects.map(p => p.id));
+    if (!categoryProjectIds.has(task.projectId)) return false;
+
+    // 오늘의 할일이 있는 작업만
+    return task.todos.some(todo => {
+      const hasStarted = !todo.startDate || todo.startDate <= today;
+      const notCompleted = !todo.completedDate || todo.completedDate >= today;
+      const isRelevant = hasStarted && (notCompleted || todo.status === "completed");
+      return isRelevant || todo.status === "on_hold";
+    });
+  });
+
+  const completedTasks = todayTasks.filter(task =>
+    task.todos.every(todo => todo.status === "completed")
+  ).length;
 
   // 진행률 계산 (보류 제외)
   const activeTodos = stats.total - stats.onHold;
@@ -406,25 +426,25 @@ export default function TodayPage() {
       {/* 헤더 */}
       <div className={styles.header}>
         <div className={styles.headerContent}>
+          <DonutChart progress={completionRate} size="md" />
           <div className={styles.headerLeft}>
             <div className={styles.titleSection}>
-              <div className={styles.categoryIndicator} />
               <h1 className={styles.title}>
-                오늘의 할일 - {currentCategory === "personal" ? "개인" : "업무"}
+                오늘의 할일
               </h1>
+              <span className={styles.category}> {currentCategory === "personal" ? "개인" : "업무"}</span>
             </div>
-            <div className={styles.headerStats}>
-              <p className={styles.date}>{dateString}</p>
-              <div className={styles.statsChips}>
-                <span className={styles.statChip}>
-                  완료된 할일 {stats.completed}/{activeTodos}
-                </span>
-              </div>
+            <p className={styles.date}>{dateString}</p>
+            <div className={styles.statsChips}>
+              <span className={styles.statChip}>
+                작업 {completedTasks} / {todayTasks.length}
+              </span>
+              <span className={styles.statChip}>
+                할일 {stats.completed} / {activeTodos}
+              </span>
             </div>
           </div>
-          <div className={styles.headerRight}>
-            <DonutChart progress={completionRate} size="md" />
-          </div>
+         
         </div>
       </div>
 

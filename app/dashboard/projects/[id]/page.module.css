@@ -324,12 +324,28 @@
 .card { background-color: white; border-radius: 0.5rem; border: 1px solid #e5e7eb; padding: 1.5rem; margin: 1.5rem; }
 
 /* 진행률 섹션 */
-.progressSection { margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e5e7eb; }
-.progressInfo { display: flex; align-items: center; margin-bottom: 0.75rem; }
+.progressSection { margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; gap: 1rem;}
+.progressInfo { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; width: 100%; }
 .progressTitle { font-size: 1rem; font-weight: 600; color: #111827; margin-right: 0.75rem; }
-.progressText { font-size: 0.875rem; color: #6b7280; }
-.progressBarWrapper { width: 100%; }
-.projectProgressContainer { width: 100%; display: flex; align-items: center; }
+
+.statsChips{
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.statChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  white-space: nowrap;
+}
+
 .cardHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
 .cardTitle { font-size: 1.125rem; font-weight: 600; color: #111827; }
 .addTaskButton { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #3b82f6; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
@@ -362,12 +378,29 @@
 .taskHeaderBottom .todoBadge { flex-shrink: 0; }
 .taskHeaderBottom .deleteTaskBtn { margin-left: auto; flex-shrink: 0; }
 
-.taskTitleWrapper { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.2s; }
+.taskTitleWrapper { display: inline-flex; align-items: flex-start; gap: 0.5rem; cursor: pointer; transition: all 0.2s; }
 .taskTitleWrapper:hover .taskTitle { color: #3b82f6; }
 .taskTitleWrapper:hover .editIcon { opacity: 1; }
 .taskTitle { font-size: 1rem; font-weight: 600; color: #111827; margin: 0; transition: color 0.2s; border-bottom: 2px solid transparent; word-break: break-word; line-height: 1.4; }
-.editTaskInput { font-size: 1rem; font-weight: 600; color: #111827; border: none; outline: none; background: transparent; border-bottom: 2px solid #3b82f6; padding: 0; width: 100%; max-width: 300px; }
-.taskProgressContainer { width: 258px; display: flex; align-items: center; height: 20px; }
+.editTaskInput { font-size: 0.9rem; color: #111827; border: none; outline: none; background: transparent; caret-color: #3b82f6; padding: 0; width: 100%;  }
+.taskProgressContainer { display: flex; align-items: center; }
+
+.taskProgressCircle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.taskProgressPercent {
+  position: absolute;
+  font-size: 0.625rem;
+  font-weight: 700;
+  pointer-events: none;
+  transition: color 0.2s;
+  z-index: 10;
+}
 
 /* 작업 제목 섹션 */
 .taskTitleSection { display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0; }
@@ -410,9 +443,213 @@
 .deleteTaskBtn { padding: 0.25rem; border-radius: 0.375rem; color: #ef4444; transition: all 0.2s; background-color: transparent; border: none; cursor: pointer; }
 .deleteTaskBtn:hover { background-color: #fef2f2; color: #dc2626; }
 .todoList { }
-.addTodoInput { display: flex; gap: 0.5rem; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; }
-.todoInput { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; }
-.todoInputActions { flex-shrink: 0; display: flex; gap: 0.5rem; justify-content: flex-end; }
+
+/* 할일 그리드 레이아웃 */
+.todoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* 할일 카드 */
+.todoCard {
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.2s;
+  min-height: 150px;
+}
+
+.todoCard:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-color: #d1d5db;
+}
+
+.todoCardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.todoProgressCircle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.progressPercent {
+  position: absolute;
+  font-size: 0.625rem;
+  font-weight: 700;
+  pointer-events: none;
+  transition: color 0.2s;
+  z-index: 10;
+}
+
+.todoCardBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.todoCardTitleWrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 0;
+}
+
+.todoCardTitleWrapper:hover .todoCardTitle {
+  color: #3b82f6;
+}
+
+.todoCardTitleWrapper:hover .editIcon {
+  opacity: 1;
+}
+
+.todoCardTitle {
+  font-size: 0.938rem;
+  font-weight: 500;
+  color: #111827;
+  line-height: 1.5;
+  word-break: break-word;
+  transition: color 0.2s;
+}
+
+.todoCardTitle.completed {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+.todoCardProgress {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.todoCardDates {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.todoCardFooter {
+  padding-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.todoCardDeleteBtn {
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  color: #9ca3af;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0;
+  flex-shrink: 0;
+}
+
+.todoCard:hover .todoCardDeleteBtn {
+  opacity: 1;
+}
+
+.todoCardDeleteBtn:hover {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+
+/* 할일 추가 버튼 카드 */
+.addTodoCard {
+  background-color: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.addTodoCard:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.addTodoIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.addTodoText {
+  font-size: 0.875rem;
+}
+
+/* 할일 추가 입력 카드 */
+.addTodoInputCard {
+  background-color: #fff;
+  border: 2px solid #3b82f6;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.todoInputInCard {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.todoInputInCard:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.todoInputCardActions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+
+/* 반응형: 1024px 이하 - 2개 */
+@media (max-width: 1024px) {
+  .todoGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 반응형: 768px 이하 - 1개 */
+@media (max-width: 768px) {
+  .todoGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .cancelTodoBtn, .saveTodoBtn { padding: 0.375rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 500; transition: all 0.2s; }
 .cancelTodoBtn { background-color: white; color: #6b7280; border: 1px solid #d1d5db; }
 .saveTodoBtn { background-color: #3b82f6; color: white; border: 1px solid #3b82f6; }
@@ -433,17 +670,13 @@
 .todoTitleWrapper:hover .editIcon { opacity: 1; }
 .todoTitle { font-size: 0.875rem; color: #374151; transition: color 0.2s; border-bottom: 1px solid transparent; word-break: break-word; line-height: 1.4; }
 .todoTitle.completed { text-decoration: line-through; color: #9ca3af; }
-.editTodoInput { font-size: 0.875rem; color: #374151; border: none; outline: none; background: transparent; border-bottom: 1px solid #3b82f6; padding: 0; margin: 0; min-width: 150px; }
-.editIcon { width: 0.75rem; height: 0.75rem; color: #9ca3af; opacity: 0; transition: opacity 0.2s; flex-shrink: 0; margin-top: 0.125rem; }
+.editTodoInput { font-size: 0.875rem; color: #374151; caret-color:#3b82f6; border: none; outline: none; background: transparent;  padding: 0; margin: 0; min-width: 150px; }
+.editIcon { width: 0.75rem; height: 0.75rem; color: #9ca3af; opacity: 0; transition: opacity 0.2s; flex-shrink: 0; margin-top: 0.35rem; }
 .todoControls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; margin-left: 0.75rem; padding-left:1.25rem; border-left: 0.125rem solid #e5e7eb; }
 .todoProgress { flex-shrink: 0; height: 20px; display: flex; align-items: center; }
 .todoActions { display: flex; gap: 0.5rem; opacity: 1; flex-wrap: wrap; }
 .todoActionBtn { display: flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 500; border: 1px solid transparent; background-color: transparent; color: #6b7280; white-space: nowrap; }
 .todoActionBtn:hover { background-color: white; border-color: #d1d5db; }
-.emptyTodos { padding: 2rem 1rem; text-align: center; color: #6b7280; font-size: 0.875rem; }
-
-/* 할일 입력 행 및 날짜 선택 */
-.todoDatePicker { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; min-width: 120px; }
 
 /* 할일 제목 및 날짜 행 */
 .todoTitleRow { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; }
@@ -455,9 +688,24 @@
 .todoDateIcon { width: 0.875rem; height: 0.875rem; color: #6b7280; }
 .todoDatePickerInline { font-size: 0.75rem; padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; min-width: 100px; }
 .todoDateInfo { display: flex; gap: 0.25rem; }
-.todoDateLabel { font-size: 0.65rem; color: #6b7280; background-color: #f3f4f6; padding: 0.125rem 0.375rem; border-radius: 0.25rem; }
+.todoDateLabel {
+  font-size: 0.65rem;
+  color: #6b7280;
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
 .todoDateLabel.clickable { cursor: pointer; transition: all 0.2s; }
 .todoDateLabel.clickable:hover { background-color: #e5e7eb; color: #374151; transform: translateY(-1px); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); }
+
+.dateIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+}
 
 /* 할일 날짜 표시 (기존, 삭제 예정) */
 .todoMeta { display: flex; align-items: center; gap: 0.5rem; }
@@ -480,9 +728,6 @@
     align-self: flex-start; 
   }
   
-  .taskProgressContainer { 
-    width: 200px; 
-  }
   
   .todoControls { 
     flex-direction: column; 
@@ -513,9 +758,6 @@
     padding: 0.2rem 0.4rem;
   }
 
-  .taskProgressContainer {
-    width: 180px;
-  }
 }
 
 /* 로딩 오버레이 */

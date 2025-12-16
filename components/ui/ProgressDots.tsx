@@ -17,91 +17,54 @@ export default function ProgressDots({
   onChange,
   disabled = false,
   size = "md",
-  showReset = true,
+  showReset = false,
 }: ProgressDotsProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  // 5% 단위로 20개의 도트 (0%, 5%, 10%, ..., 95%, 100%)
-  const totalDots = 20;
-  const dotsArray = Array.from({ length: totalDots }, (_, i) => i * 5);
+  // 10% 단위로 11개의 버튼 (0%, 10%, 20%, ..., 90%, 100%)
+  const progressValues = Array.from({ length: 11 }, (_, i) => i * 10);
 
-  const getFilledDots = () => {
-    return Math.floor(progress / 5);
-  };
-
-  const handleDotClick = (index: number) => {
+  const handleButtonClick = (value: number) => {
     if (disabled || !onChange) return;
-    const newProgress = (index + 1) * 5;
-    onChange(newProgress);
+    onChange(value);
   };
 
-  const handleReset = () => {
-    if (disabled || !onChange) return;
-    onChange(0);
+  // 현재 진행률에 따른 전체 색상 결정
+  const getCurrentProgressColor = () => {
+    if (progress === 100) return 'blue'; // 완료 (파란색)
+    if (progress > 40) return 'green'; // 높은 진행률 (녹색)
+    if (progress > 0) return 'yellow'; // 시작됨 (노란색)
+    return 'gray'; // 시작 안 함 (회색)
   };
 
-  const getPreviewProgress = () => {
-    if (hoveredIndex !== null && !disabled) {
-      return (hoveredIndex + 1) * 5;
-    }
-    return progress;
-  };
-
-  const filledDots = getFilledDots();
-  const previewProgress = getPreviewProgress();
-  const previewFilledDots = Math.floor(previewProgress / 5);
-
-  // 진행률에 따른 색상 결정
-  const getProgressColor = (currentProgress: number) => {
-    if (currentProgress >= 100) return '#3b82f6'; // 완료 (파란색)
-    if (currentProgress >= 70) return '#22c55e'; // 높은 진행률 (녹색)
-    if (currentProgress >= 40) return '#f59e0b'; // 중간 진행률 (주황색)
-    return '#ef4444'; // 낮은 진행률 (빨간색)
-  };
+  const currentColor = getCurrentProgressColor();
 
   return (
     <div className={`${styles.container} ${styles[size]}`}>
-      <div className={styles.dotsContainer}>
-        {dotsArray.map((value, index) => {
-          const isFilled = index < filledDots;
-          const isPreviewFilled = index < previewFilledDots;
-          const isHovered = hoveredIndex === index;
+      <div className={styles.buttonsContainer}>
+        {progressValues.map((value) => {
+          const isSelected = progress === value;
+          const isFilled = value <= progress;
+          const colorClass = isFilled ? currentColor : 'gray';
 
           return (
             <button
               key={value}
-              className={`${styles.dot} ${isFilled ? styles.filled : ""} ${
-                isPreviewFilled && hoveredIndex !== null ? styles.preview : ""
-              } ${isHovered ? styles.hovered : ""} ${
-                disabled ? styles.disabled : styles.interactive
-              }`}
-              style={
-                isFilled
-                  ? { backgroundColor: getProgressColor(progress) }
-                  : undefined
-              }
-              onClick={() => handleDotClick(index)}
-              onMouseEnter={() => !disabled && setHoveredIndex(index)}
+              className={`${styles.progressButton} ${styles[colorClass]} ${
+                isSelected ? styles.selected : ""
+              } ${disabled ? styles.disabled : ""}`}
+              onClick={() => handleButtonClick(value)}
+              onMouseEnter={() => !disabled && setHoveredIndex(value)}
               onMouseLeave={() => setHoveredIndex(null)}
               disabled={disabled}
-              title={`${(index + 1) * 5}%`}
-              aria-label={`진행률 ${(index + 1) * 5}%로 설정`}
-            />
+              title={`${value}%`}
+              aria-label={`진행률 ${value}%로 설정`}
+            >
+              {value}
+            </button>
           );
         })}
       </div>
-      <div className={styles.percentageText}>
-        {hoveredIndex !== null && !disabled ? previewProgress : progress}%
-      </div>
-      <button
-        onClick={handleReset}
-        className={styles.resetButton}
-        title="진행률 0%로 리셋"
-        aria-label="진행률 리셋"
-        disabled={!showReset || disabled || progress == 0}
-      >
-        <RotateCcw className={styles.resetIcon} />
-      </button>
     </div>
   );
 }

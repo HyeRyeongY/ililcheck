@@ -1,38 +1,38 @@
 "use client";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import ProgressBar from "@/components/ui/ProgressBar";
+import DonutChart from "@/components/ui/DonutChart";
 import ProgressDots from "@/components/ui/ProgressDots";
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  createIssue,
   createTask,
   createTodo,
+  deleteIssue,
   deleteProject,
   deleteTask,
   deleteTodo,
+  fetchIssuesByProject,
   fetchProjects,
   fetchTasksByProject,
+  updateIssue,
   updateProject,
   updateTask,
   updateTodo,
-  fetchIssuesByProject,
-  createIssue,
-  updateIssue,
-  deleteIssue,
 } from "@/lib/api";
-import { Project, ProjectCategory, Task, Todo, Issue } from "@/lib/types";
+import { Issue, Project, ProjectCategory, Task, Todo } from "@/lib/types";
 import { ko } from "date-fns/locale/ko";
 import {
+  AlertCircle,
+  Calendar,
   Check,
   ChevronDown,
   ChevronRight,
-  Clock,
   Edit3,
   MoreVertical,
   Plus,
   Trash2,
-  X,
-  AlertCircle,
+  X
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -98,7 +98,6 @@ export default function ProjectDetailPage() {
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
   const [isAddingTodo, setIsAddingTodo] = useState<string | null>(null);
   const [newTodoName, setNewTodoName] = useState("");
-  const [newTodoDueDate, setNewTodoDueDate] = useState<Date | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   // 편집 상태
@@ -251,6 +250,34 @@ export default function ProjectDetailPage() {
 
     loadData();
   }, [user, params.id]);
+
+  // 할일 제목 편집 시 외부 클릭 감지
+  useEffect(() => {
+    if (!editingTodoId) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // 편집 중인 input이 아닌 곳을 클릭하면 저장
+      if (!target.closest(`.${styles.editTodoInput}`)) {
+        const taskId = tasks.find(t =>
+          t.todos.some(todo => todo.id === editingTodoId)
+        )?.id;
+        if (taskId) {
+          saveEditingTodo(taskId, editingTodoId);
+        }
+      }
+    };
+
+    // 약간의 지연을 두고 이벤트 리스너 추가 (input이 마운트된 후)
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editingTodoId, tasks, editTodoName]);
 
   // 저장 확인 함수
   const handleSave = () => {
@@ -625,12 +652,6 @@ export default function ProjectDetailPage() {
   };
 
   // 새 할일 추가
-  const addNewTodo = (taskId: string) => {
-    setIsAddingTodo(taskId);
-    setNewTodoName("");
-    setNewTodoDueDate(null);
-  };
-
   const createNewTodo = async (taskId: string) => {
     if (!newTodoName.trim()) return;
 
@@ -639,13 +660,10 @@ export default function ProjectDetailPage() {
       const todoId = await createTodo({
         taskId,
         title: newTodoName.trim(),
-        status: newTodoDueDate ? "todo" : "on_hold", // 날짜가 없으면 보류 상태
+        status: "todo",
         progress: 0,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        dueDate: newTodoDueDate
-          ? newTodoDueDate.toISOString().split("T")[0]
-          : undefined,
       });
 
       if (todoId) {
@@ -654,7 +672,6 @@ export default function ProjectDetailPage() {
 
         setIsAddingTodo(null);
         setNewTodoName("");
-        setNewTodoDueDate(null);
       } else {
         throw new Error("할일 생성 실패");
       }
@@ -704,7 +721,7 @@ export default function ProjectDetailPage() {
 
     // 시작일 초기화 (진행률이 0으로 돌아갈 때)
     if (progress === 0 && oldTodo.startDate) {
-      updates.startDate = undefined;
+      updates.startDate = null as any;
     }
 
     // 완료일 자동 설정
@@ -714,7 +731,7 @@ export default function ProjectDetailPage() {
 
     // 완료일 초기화 (진행률이 100 미만으로 낮아질 때)
     if (progress < 100 && oldTodo.completedDate) {
-      updates.completedDate = undefined;
+      updates.completedDate = null as any;
     }
 
     try {
@@ -822,6 +839,18 @@ export default function ProjectDetailPage() {
     todoId: string,
     currentTitle: string
   ) => {
+    // 이미 다른 할일을 편집 중이면 먼저 저장 (비동기로 백그라운드에서 실행)
+    if (editingTodoId && editingTodoId !== todoId) {
+      const previousTaskId = tasks.find(t =>
+        t.todos.some(todo => todo.id === editingTodoId)
+      )?.id;
+      if (previousTaskId) {
+        // 저장을 기다리지 않고 바로 실행 (깜빡임 방지)
+        saveEditingTodo(previousTaskId, editingTodoId);
+      }
+    }
+
+    // 즉시 새로운 편집 모드로 전환
     setEditingTodoId(todoId);
     setEditTodoName(currentTitle);
   };
@@ -1195,7 +1224,7 @@ export default function ProjectDetailPage() {
                   locale="ko"
                 />
               ) : (
-                <p>{`${project.startDate} - ${project.endDate}`}</p>
+                <p>{`${project.startDate} ~ ${project.endDate}`}</p>
               )}
             </div>
           </div>
@@ -1338,38 +1367,21 @@ export default function ProjectDetailPage() {
         <div className={styles.contentInner}>
           {/* 작업 목록 */}
           <div className={styles.card}>
-        {/* 프로젝트 진행률 */}
-        <div className={styles.progressSection}>
-          <div className={styles.progressInfo}>
-            <h3 className={styles.progressTitle}>프로젝트 진행률</h3>
-            <span className={styles.progressText}>
-              {completedTasks}/{totalTasks} 작업 완료 • {currentProjectProgress}
-              %
-            </span>
-          </div>
-          <div className={styles.progressBarWrapper}>
-            <div className={styles.projectProgressContainer}>
-              {tasks.length === 0 ? (
-                <ProgressDots
-                  progress={currentProjectProgress}
-                  size="md"
-                  onChange={progress => {
-                    // 프로젝트 진행률 직접 수정 (작업이 없을 때만)
-                    if (project && params.id) {
-                      updateProject(params.id as string, { progress });
-                      setProject({ ...project, progress });
-                    }
-                  }}
-                />
-              ) : (
-                <ProgressBar
-                  progress={currentProjectProgress}
-                  showLabel={false}
-                />
-              )}
+            {/* 프로젝트 진행률 */}
+            <div className={styles.progressSection}>
+              <DonutChart progress={currentProjectProgress} size="sm" />
+              <div className={styles.progressInfo}>
+                <h3 className={styles.progressTitle}>프로젝트 진행률</h3>
+                <div className={styles.statsChips}>
+                    <span className={styles.statChip}>
+                      작업 {completedTasks} / {totalTasks}  
+                    </span>
+                    <span className={styles.statChip}>
+                      할일 {completedTasks} / {totalTasks}  
+                    </span>
+                  </div>
+              </div>
             </div>
-          </div>
-        </div>
 
         <div className={styles.cardHeader}>
           <h2 className={styles.cardTitle}>작업 목록</h2>
@@ -1461,24 +1473,6 @@ export default function ProjectDetailPage() {
                         </button>
 
                         <div className={styles.taskTitleSection}>
-                          <div
-                            className={`${styles.taskStatusIcon} ${
-                              task.progress === 100
-                                ? styles.completed
-                                : task.progress > 0
-                                  ? styles.inProgress
-                                  : styles.pending
-                            }`}
-                          >
-                            {task.progress === 100 ? (
-                              <Check className="w-3 h-3" />
-                            ) : task.progress > 0 ? (
-                              <Clock className="w-3 h-3" />
-                            ) : (
-                              <div className={styles.todoStatusDot} />
-                            )}
-                          </div>
-
                           {editingTaskId === task.id ? (
                             <input
                               type="text"
@@ -1507,22 +1501,6 @@ export default function ProjectDetailPage() {
                             </div>
                           )}
                         </div>
-
-                        <button
-                          onClick={() => {
-                            if (!expandedTasks.has(task.id)) {
-                              toggleTaskExpansion(task.id);
-                            } else {
-                              addNewTodo(task.id);
-                            }
-                          }}
-                          className={styles.addTodoBtn}
-                          title={
-                            expandedTasks.has(task.id) ? "할일 추가" : "작업 열기"
-                          }
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
                       </div>
 
                       {/* 아래 행: 프로그레스바 + 배지 + 삭제 */}
@@ -1537,7 +1515,30 @@ export default function ProjectDetailPage() {
                               }
                             />
                           ) : (
-                            <ProgressBar progress={task.progress} />
+                            <div className={styles.taskProgressCircle}>
+                              <DonutChart
+                                progress={task.progress}
+                                size="xs"
+                                color={
+                                  task.progress === 100 ? "#3b82f6" :
+                                  task.progress > 40 ? "#34d399" :
+                                  task.progress > 0 ? "#fbbf24" :
+                                  "#e5e7eb"
+                                }
+                                showLabel={false}
+                              />
+                              <span
+                                className={styles.taskProgressPercent}
+                                style={{
+                                  color: task.progress === 100 ? "#3b82f6" :
+                                         task.progress > 40 ? "#34d399" :
+                                         task.progress > 0 ? "#fbbf24" :
+                                         "#9ca3af"
+                                }}
+                              >
+                                {task.progress}
+                              </span>
+                            </div>
                           )}
                         </div>
 
@@ -1575,182 +1576,81 @@ export default function ProjectDetailPage() {
 
                   {expandedTasks.has(task.id) && (
                     <div className={styles.todoList}>
-                      {/* 새 할일 추가 입력 */}
-
-                      {isAddingTodo === task.id && (
-                        <div className={styles.addTodoInput}>
-                          <input
-                            type="text"
-                            className={styles.todoInput}
-                            placeholder="할일을 입력하세요"
-                            value={newTodoName}
-                            onChange={e => setNewTodoName(e.target.value)}
-                            autoFocus
-                            onKeyDown={e => {
-                              if (e.key === "Enter" && newTodoName.trim()) {
-                                createNewTodo(task.id);
-                              } else if (e.key === "Escape") {
-                                setIsAddingTodo(null);
-
-                                setNewTodoName("");
-                                setNewTodoDueDate(null);
-                              }
-                            }}
-                          />
-                          <DatePicker
-                            selected={newTodoDueDate}
-                            onChange={date => setNewTodoDueDate(date)}
-                            placeholderText="미정"
-                            dateFormat="yyyy-MM-dd"
-                            className={styles.todoDatePicker}
-                            locale="ko"
-                            isClearable
-                          />
-
-                          <div className={styles.todoInputActions}>
-                            <button
-                              onClick={() => createNewTodo(task.id)}
-                              className={styles.saveTodoBtn}
-                              disabled={!newTodoName.trim()}
-                            >
-                              추가
-                            </button>
-
-                            <button
-                              onClick={() => {
-                                setIsAddingTodo(null);
-
-                                setNewTodoName("");
-                                setNewTodoDueDate(null);
-                              }}
-                              className={styles.cancelTodoBtn}
-                            >
-                              취소
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
                       {/* 할일 목록 */}
-
+                      <div className={styles.todoGrid}>
                       {task.todos.map(todo => (
-                        <div key={todo.id} className={styles.todoItem}>
-                          <div className={styles.todoContent}>
-                            <div className={styles.todoInfo}>
-                              <div
-                                className={`${styles.todoStatus} ${styles[todo.status]}`}
+                        <div key={todo.id} className={styles.todoCard}>
+                          {/* 첫 번째 행: Progress Circle + Title */}
+                          <div className={styles.todoCardHeader}>
+                            <div className={styles.todoProgressCircle}>
+                              <DonutChart
+                                progress={todo.progress}
+                                size="xs"
+                                color={
+                                  todo.progress === 100 ? "#3b82f6" : // 파란색
+                                  todo.progress > 40 ? "#34d399" : // 녹색
+                                  todo.progress > 0 ? "#fbbf24" : // 노란색
+                                  "#e5e7eb" // 회색
+                                }
+                                showLabel={false}
                               />
-
-                              <div className={styles.todoTitleRow}>
-                                {editingTodoId === todo.id ? (
-                                  <input
-                                    type="text"
-                                    value={editTodoName}
-                                    onChange={e =>
-                                      setEditTodoName(e.target.value)
-                                    }
-                                    onKeyDown={e => {
-                                      if (e.key === "Enter") {
-                                        saveEditingTodo(task.id, todo.id);
-                                      } else if (e.key === "Escape") {
-                                        cancelEditingTodo();
-                                      }
-                                    }}
-                                    onBlur={() =>
-                                      saveEditingTodo(task.id, todo.id)
-                                    }
-                                    className={styles.editTodoInput}
-                                    autoFocus
-                                  />
-                                ) : (
-                                  <div
-                                    className={styles.todoTitleWrapper}
-                                    onClick={() =>
-                                      startEditingTodo(
-                                        task.id,
-                                        todo.id,
-                                        todo.title
-                                      )
-                                    }
-                                  >
-                                    <span
-                                      className={`${styles.todoTitle} ${
-                                        todo.status === "completed"
-                                          ? styles.completed
-                                          : ""
-                                      }`}
-                                    >
-                                      {todo.title}
-                                    </span>
-                                    <Edit3 className={styles.editIcon} />
-                                  </div>
-                                )}
-
-                                {/* 시작일/완료일 표시 및 선택 */}
-                                <div className={styles.todoDateSection}>
-                                  <div className={styles.todoDateInfo}>
-                                    {editingTodoDate === todo.id ? (
-                                      <DatePicker
-                                        selected={
-                                          todo.startDate
-                                            ? new Date(todo.startDate)
-                                            : null
-                                        }
-                                        onChange={date =>
-                                          updateTodoStartDate(
-                                            task.id,
-                                            todo.id,
-                                            date
-                                          )
-                                        }
-                                        onClickOutside={() =>
-                                          cancelEditingTodoDate()
-                                        }
-                                        placeholderText="시작일 선택"
-                                        dateFormat="yyyy-MM-dd"
-                                        className={styles.todoDatePickerInline}
-                                        locale="ko"
-                                        isClearable
-                                        autoFocus
-                                      />
-                                    ) : (
-                                      <span
-                                        className={`${styles.todoDateLabel} ${styles.clickable}`}
-                                        onClick={() =>
-                                          startEditingTodoDate(todo.id)
-                                        }
-                                        title="클릭하여 시작일 설정"
-                                      >
-                                        시작:{" "}
-                                        {todo.startDate
-                                          ? new Date(
-                                              todo.startDate
-                                            ).toLocaleDateString("ko-KR", {
-                                              month: "short",
-                                              day: "numeric",
-                                            })
-                                          : "-"}
-                                      </span>
-                                    )}
-                                    <span className={styles.todoDateLabel}>
-                                      완료:{" "}
-                                      {todo.completedDate
-                                        ? new Date(
-                                            todo.completedDate
-                                          ).toLocaleDateString("ko-KR", {
-                                            month: "short",
-                                            day: "numeric",
-                                          })
-                                        : "-"}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
+                              <span
+                                className={styles.progressPercent}
+                                style={{
+                                  color: todo.progress === 100 ? "#3b82f6" :
+                                         todo.progress > 40 ? "#34d399" :
+                                         todo.progress > 0 ? "#fbbf24" :
+                                         "#9ca3af"
+                                }}
+                              >
+                                {todo.progress}
+                              </span>
                             </div>
+                            {editingTodoId === todo.id ? (
+                              <input
+                                type="text"
+                                value={editTodoName}
+                                onChange={e =>
+                                  setEditTodoName(e.target.value)
+                                }
+                                onKeyDown={e => {
+                                  if (e.key === "Enter") {
+                                    saveEditingTodo(task.id, todo.id);
+                                  } else if (e.key === "Escape") {
+                                    cancelEditingTodo();
+                                  }
+                                }}
+                                className={styles.editTodoInput}
+                                autoFocus
+                              />
+                            ) : (
+                              <div
+                                className={styles.todoCardTitleWrapper}
+                                onClick={() =>
+                                  startEditingTodo(
+                                    task.id,
+                                    todo.id,
+                                    todo.title
+                                  )
+                                }
+                              >
+                                <span
+                                  className={`${styles.todoCardTitle} ${
+                                    todo.status === "completed"
+                                      ? styles.completed
+                                      : ""
+                                  }`}
+                                >
+                                  {todo.title}
+                                </span>
+                                <Edit3 className={styles.editIcon} />
+                              </div>
+                            )}
                           </div>
 
-                          <div className={styles.todoControls}>
-                            <div className={styles.todoProgress}>
+                          <div className={styles.todoCardBody}>
+                            {/* 두 번째 행: Progress Buttons */}
+                            <div className={styles.todoCardProgress}>
                               <ProgressDots
                                 progress={todo.progress}
                                 size="sm"
@@ -1759,30 +1659,134 @@ export default function ProjectDetailPage() {
                                 }
                               />
                             </div>
+                          </div>
 
-                            {/* 할일 삭제 버튼 */}
-
-                            <div className={styles.todoActions}>
-                              <button
-                                onClick={() =>
-                                  handleTodoDelete(task.id, todo.id)
-                                }
-                                className={`${styles.todoActionBtn} ${styles.deleteBtn}`}
-                                title="삭제"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                                삭제
-                              </button>
+                          {/* 세 번째 행: 날짜 + Delete */}
+                          <div className={styles.todoCardFooter}>
+                            <div className={styles.todoCardDates}>
+                              {editingTodoDate === todo.id ? (
+                                <DatePicker
+                                  selected={
+                                    todo.startDate
+                                      ? new Date(todo.startDate)
+                                      : null
+                                  }
+                                  onChange={date =>
+                                    updateTodoStartDate(
+                                      task.id,
+                                      todo.id,
+                                      date
+                                    )
+                                  }
+                                  onClickOutside={() =>
+                                    cancelEditingTodoDate()
+                                  }
+                                  placeholderText="시작일 선택"
+                                  dateFormat="yyyy-MM-dd"
+                                  className={styles.todoDatePickerInline}
+                                  locale="ko"
+                                  isClearable
+                                  autoFocus
+                                />
+                              ) : (
+                                <span
+                                  className={`${styles.todoDateLabel} ${styles.clickable}`}
+                                  onClick={() =>
+                                    startEditingTodoDate(todo.id)
+                                  }
+                                  title="클릭하여 시작일 설정"
+                                >
+                                  <Calendar className={styles.dateIcon} />
+                                  시작:{" "}
+                                  {todo.startDate
+                                    ? new Date(
+                                        todo.startDate
+                                      ).toLocaleDateString("ko-KR", {
+                                        month: "short",
+                                        day: "numeric",
+                                      })
+                                    : "-"}
+                                </span>
+                              )}
+                              <span className={styles.todoDateLabel}>
+                                <Calendar className={styles.dateIcon} />
+                                완료:{" "}
+                                {todo.completedDate
+                                  ? new Date(
+                                      todo.completedDate
+                                    ).toLocaleDateString("ko-KR", {
+                                      month: "short",
+                                      day: "numeric",
+                                    })
+                                  : "-"}
+                              </span>
                             </div>
+                            <button
+                              onClick={() =>
+                                handleTodoDelete(task.id, todo.id)
+                              }
+                              className={styles.todoCardDeleteBtn}
+                              title="삭제"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
                           </div>
                         </div>
                       ))}
 
-                      {task.todos.length === 0 && isAddingTodo !== task.id && (
-                        <div className={styles.emptyTodos}>
-                          <p>할일이 없습니다. 새로운 할일을 추가해보세요.</p>
+                      {/* 할일 추가 버튼 또는 입력 카드 */}
+                      {isAddingTodo === task.id ? (
+                        <div className={styles.addTodoInputCard}>
+                          <input
+                            type="text"
+                            className={styles.todoInputInCard}
+                            placeholder="할일 이름을 입력하세요"
+                            value={newTodoName}
+                            onChange={e => setNewTodoName(e.target.value)}
+                            autoFocus
+                            onKeyDown={e => {
+                              if (e.key === "Enter" && newTodoName.trim()) {
+                                createNewTodo(task.id);
+                              } else if (e.key === "Escape") {
+                                setIsAddingTodo(null);
+                                setNewTodoName("");
+                              }
+                            }}
+                          />
+                          <div className={styles.todoInputCardActions}>
+                            <button
+                              onClick={() => {
+                                setIsAddingTodo(null);
+                                setNewTodoName("");
+                              }}
+                              className={styles.cancelTodoBtn}
+                            >
+                              취소
+                            </button>
+                            <button
+                              onClick={() => createNewTodo(task.id)}
+                              className={styles.saveTodoBtn}
+                              disabled={!newTodoName.trim()}
+                            >
+                              저장
+                            </button>
+                          </div>
                         </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (!expandedTasks.has(task.id)) {
+                              toggleTaskExpansion(task.id);
+                            }
+                            setIsAddingTodo(task.id);
+                          }}
+                          className={styles.addTodoCard}
+                        >
+                          <Plus className={styles.addTodoIcon} />
+                          <span className={styles.addTodoText}>할일 추가</span>
+                        </button>
                       )}
+                      </div>
                     </div>
                   )}
                 </div>
