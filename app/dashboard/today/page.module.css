@@ -15,9 +15,24 @@
 
 .headerContent {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.headerLeft {
+  display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.25rem;
+  flex: 1;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .titleSection {
@@ -46,11 +61,36 @@
   margin: 0;
 }
 
+.headerStats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-left: calc(0.75rem + 0.25rem); /* gap + indicator width */
+}
+
 .date {
   font-size: 0.875rem;
   color: #6b7280;
   margin: 0;
-  padding-left: calc(0.75rem + 0.25rem); /* gap + indicator width */
+}
+
+.statsChips {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.statChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  white-space: nowrap;
 }
 
 /* 콘텐츠 영역 */
@@ -653,6 +693,15 @@
     padding: 0.75rem 1rem;
   }
 
+  .headerContent {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .headerRight {
+    margin-top: 0.25rem;
+  }
+
   .content {
     padding: 0 1rem 1rem;
   }
@@ -663,6 +712,17 @@
 
   .date {
     font-size: 0.8125rem;
+  }
+
+  .headerStats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .statChip {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
   }
 
   .progressSection {

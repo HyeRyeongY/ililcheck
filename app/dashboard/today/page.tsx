@@ -1,5 +1,6 @@
 "use client";
 
+import DonutChart from "@/components/ui/DonutChart";
 import ProgressBar from "@/components/ui/ProgressBar";
 import ProgressDots from "@/components/ui/ProgressDots";
 import { useAuth } from "@/contexts/AuthContext";
@@ -96,15 +97,27 @@ export default function TodayPage() {
   // 현재 카테고리의 프로젝트 ID 목록
   const categoryProjectIds = new Set(categoryProjects.map(p => p.id));
 
-  // 현재 카테고리의 모든 할일 추출
+  // 현재 카테고리의 모든 할일 추출 (오늘 날짜 기준)
   const allTodos = allTasks
     .filter(task => categoryProjectIds.has(task.projectId))
     .flatMap(task =>
-      task.todos.map(todo => ({
-        ...todo,
-        taskTitle: task.title,
-        projectId: task.projectId,
-      }))
+      task.todos
+        .filter(todo => {
+          // 오늘 날짜에 해당하는 할일만 포함
+          // 1. 시작일이 오늘 이전이거나 오늘인 경우
+          // 2. 완료일이 없거나 오늘 이후인 경우
+          // 3. 또는 보류 상태가 아닌 경우
+          const hasStarted = !todo.startDate || todo.startDate <= today;
+          const notCompleted = !todo.completedDate || todo.completedDate >= today;
+          const isRelevant = hasStarted && (notCompleted || todo.status === "completed");
+
+          return isRelevant || todo.status === "on_hold";
+        })
+        .map(todo => ({
+          ...todo,
+          taskTitle: task.title,
+          projectId: task.projectId,
+        }))
     );
 
   // 필터링된 할일
@@ -124,13 +137,19 @@ export default function TodayPage() {
         task => task.projectId === project.id
       );
 
-      // 각 작업의 할일을 필터링
+      // 각 작업의 할일을 필터링 (오늘 날짜 + 상태 필터)
       const tasksWithFilteredTodos = projectTasks.map(task => {
         const taskTodos = task.todos.filter(todo => {
-          // 아무것도 선택되지 않았으면 전체 표시
-          if (activeFilters.size === 0) return true;
+          // 오늘 날짜 필터링
+          const hasStarted = !todo.startDate || todo.startDate <= today;
+          const notCompleted = !todo.completedDate || todo.completedDate >= today;
+          const isRelevant = hasStarted && (notCompleted || todo.status === "completed");
+          const isTodayTodo = isRelevant || todo.status === "on_hold";
 
-          // 선택된 필터 중 하나라도 일치하면 표시
+          if (!isTodayTodo) return false;
+
+          // 상태 필터
+          if (activeFilters.size === 0) return true;
           return activeFilters.has(todo.status as FilterType);
         });
 
@@ -141,18 +160,29 @@ export default function TodayPage() {
         };
       });
 
-      // 모든 작업 포함 (할일이 없어도 표시)
-      const visibleTasks = tasksWithFilteredTodos;
+      // 오늘의 할일이 있는 작업만 표시
+      const visibleTasks = tasksWithFilteredTodos.filter(
+        task => task.filteredTodos.length > 0
+      );
 
-      // 프로젝트 통계
-      const allProjectTodos = projectTasks.flatMap(task => task.todos);
-      const completedTasks = projectTasks.filter(t => t.status === "completed").length;
+      // 프로젝트 통계 (오늘의 할일 기준)
+      const todayProjectTodos = projectTasks.flatMap(task =>
+        task.todos.filter(todo => {
+          const hasStarted = !todo.startDate || todo.startDate <= today;
+          const notCompleted = !todo.completedDate || todo.completedDate >= today;
+          const isRelevant = hasStarted && (notCompleted || todo.status === "completed");
+          return isRelevant || todo.status === "on_hold";
+        })
+      );
+
       const projectStats = {
-        total: allProjectTodos.length,
-        completed: allProjectTodos.filter(t => t.status === "completed").length,
-        onHold: allProjectTodos.filter(t => t.status === "on_hold").length,
-        taskCount: projectTasks.length,
-        completedTasks: completedTasks,
+        total: todayProjectTodos.length,
+        completed: todayProjectTodos.filter(t => t.status === "completed").length,
+        onHold: todayProjectTodos.filter(t => t.status === "on_hold").length,
+        taskCount: visibleTasks.length,
+        completedTasks: visibleTasks.filter(t =>
+          t.filteredTodos.every(todo => todo.status === "completed")
+        ).length,
       };
       const projectActiveTodos = projectStats.total - projectStats.onHold;
       const projectCompletionRate =
@@ -185,6 +215,23 @@ export default function TodayPage() {
   const activeTodos = stats.total - stats.onHold;
   const completionRate =
     activeTodos > 0 ? Math.round((stats.completed / activeTodos) * 100) : 0;
+
+  // 디버깅용 로그
+  console.log("📊 오늘의 할일 통계:", {
+    오늘의전체할일: stats.total,
+    시작전: stats.todo,
+    진행중: stats.inProgress,
+    완료: stats.completed,
+    보류: stats.onHold,
+    활성할일: activeTodos,
+    완료율: completionRate + "%",
+  });
+  console.log("📋 할일 상세:", allTodos.map(t => ({
+    제목: t.title,
+    상태: t.status,
+    시작일: t.startDate,
+    완료일: t.completedDate,
+  })));
 
   // 할일 업데이트
   const updateTodoHandler = async (todoId: string, updates: Partial<Todo>) => {
@@ -359,32 +406,31 @@ export default function TodayPage() {
       {/* 헤더 */}
       <div className={styles.header}>
         <div className={styles.headerContent}>
-          <div className={styles.titleSection}>
-            <div className={styles.categoryIndicator} />
-            <h1 className={styles.title}>
-              오늘의 할일 - {currentCategory === "personal" ? "개인" : "업무"}
-            </h1>
+          <div className={styles.headerLeft}>
+            <div className={styles.titleSection}>
+              <div className={styles.categoryIndicator} />
+              <h1 className={styles.title}>
+                오늘의 할일 - {currentCategory === "personal" ? "개인" : "업무"}
+              </h1>
+            </div>
+            <div className={styles.headerStats}>
+              <p className={styles.date}>{dateString}</p>
+              <div className={styles.statsChips}>
+                <span className={styles.statChip}>
+                  완료된 할일 {stats.completed}/{activeTodos}
+                </span>
+              </div>
+            </div>
           </div>
-          <p className={styles.date}>{dateString}</p>
+          <div className={styles.headerRight}>
+            <DonutChart progress={completionRate} size="md" />
+          </div>
         </div>
       </div>
 
       {/* 콘텐츠 영역 */}
       <div className={styles.content}>
         <div className={styles.contentInner}>
-          {/* 진행률 */}
-          <div className={styles.progressSection}>
-          <div className={styles.progressInfo}>
-            <h3 className={styles.progressTitle}>완료율</h3>
-            <span className={styles.progressText}>
-              {stats.completed}/{activeTodos} 완료 • {completionRate}%
-            </span>
-          </div>
-          <div className={styles.progressBarWrapper}>
-            <ProgressBar progress={completionRate} />
-          </div>
-        </div>
-
         {/* 필터 버튼 */}
         <div className={styles.filterButtons}>
           <button

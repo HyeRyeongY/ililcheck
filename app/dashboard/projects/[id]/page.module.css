@@ -359,6 +359,8 @@
 
 /* 아래 행: 프로그레스바 + 배지 + 삭제 */
 .taskHeaderBottom { display: flex; align-items: center; gap: 0.75rem; padding-left: 2rem; }
+.taskHeaderBottom .todoBadge { flex-shrink: 0; }
+.taskHeaderBottom .deleteTaskBtn { margin-left: auto; flex-shrink: 0; }
 
 .taskTitleWrapper { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.2s; }
 .taskTitleWrapper:hover .taskTitle { color: #3b82f6; }
