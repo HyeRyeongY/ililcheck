@@ -361,14 +361,14 @@
 .emptyTaskState { text-align: center; padding: 3rem 2rem; border: 2px dashed #e5e7eb; border-radius: 0.5rem; }
 .emptyStateTitle { font-size: 1.125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; }
 .emptyStateText { color: #6b7280; }
-.tasksSection { display: flex; flex-direction: column; gap: 1rem; }
+.tasksSection { display: flex; flex-direction: column; gap: 0.5rem; }
 .taskItem { border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: white; overflow: hidden; }
-.taskHeader { padding: 1rem; }
+.taskHeader { padding: 0.5rem; }
 .taskHeaderClickable { cursor: pointer; transition: background-color 0.2s; }
 .taskHeaderClickable:hover { background-color: #f9fafb; }
 
 /* 작업 헤더 컨텐츠 */
-.taskHeaderContent { display: flex; flex-direction: column; gap: 0.5rem; }
+.taskHeaderContent { display: flex; flex-direction: column; }
 
 /* 위 행: 토글 + 제목 + 할일추가 */
 .taskHeaderTop { display: flex; align-items: center; gap: 0.75rem; }
