@@ -7,7 +7,8 @@ import styles from '../login/page.module.css';
 
 export default function SignupPage() {
   const router = useRouter();
-  const [displayName, setDisplayName] = useState('');
+  const [userId, setUserId] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,7 +19,17 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
 
-    if (!displayName.trim()) {
+    if (!userId.trim()) {
+      setError('로그인 아이디를 입력해주세요.');
+      return;
+    }
+
+    if (userId.length < 4) {
+      setError('로그인 아이디는 최소 4자 이상이어야 합니다.');
+      return;
+    }
+
+    if (!username.trim()) {
       setError('이름을 입력해주세요.');
       return;
     }
@@ -35,7 +46,7 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const { user, error } = await signUpWithEmail(email, password, displayName);
+    const { user, error } = await signUpWithEmail(userId, email, password, username);
 
     if (error) {
       setError('회원가입에 실패했습니다. 다시 시도해주세요.');
@@ -75,11 +86,23 @@ export default function SignupPage() {
 
         <form onSubmit={handleSignup} className={styles.form}>
           <div className={styles.inputGroup}>
+            <label className={styles.label}>로그인 아이디</label>
+            <input
+              type="text"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              className={styles.input}
+              placeholder="영문, 숫자 4자 이상"
+              required
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
             <label className={styles.label}>이름 (닉네임)</label>
             <input
               type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className={styles.input}
               placeholder="홍길동"
               required
@@ -87,14 +110,13 @@ export default function SignupPage() {
           </div>
 
           <div className={styles.inputGroup}>
-            <label className={styles.label}>이메일</label>
+            <label className={styles.label}>이메일 (선택)</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={styles.input}
               placeholder="email@example.com"
-              required
             />
           </div>
 

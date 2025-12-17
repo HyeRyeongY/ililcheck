@@ -12,7 +12,7 @@ const DotBackground = dynamic(() => import("@/components/p5/DotBackground"), {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
@@ -20,31 +20,31 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const rememberedEmail = localStorage.getItem("rememberedEmail");
-      if (rememberedEmail) {
-        setEmail(rememberedEmail);
+      const rememberedUsername = localStorage.getItem("rememberedUsername");
+      if (rememberedUsername) {
+        setUsername(rememberedUsername);
         setRememberMe(true);
       }
     }
   }, []);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const { user, error } = await signInWithEmail(email, password);
+    const { user, error } = await signInWithEmail(username, password);
 
     setLoading(false);
     if (error) {
-      setError("로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.");
+      setError("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
       return;
     }
 
     if (rememberMe) {
-      localStorage.setItem("rememberedEmail", email);
+      localStorage.setItem("rememberedUsername", username);
     } else {
-      localStorage.removeItem("rememberedEmail");
+      localStorage.removeItem("rememberedUsername");
     }
 
     router.push("/dashboard/today");
@@ -76,15 +76,15 @@ export default function LoginPage() {
 
         {error && <div className={styles.error}>{error}</div>}
 
-        <form onSubmit={handleEmailLogin} className={styles.form}>
+        <form onSubmit={handleLogin} className={styles.form}>
           <div className={styles.inputGroup}>
-            <label className={styles.label}>이메일</label>
+            <label className={styles.label}>아이디</label>
             <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
               className={styles.input}
-              placeholder="email@example.com"
+              placeholder="아이디를 입력하세요"
               required
             />
           </div>

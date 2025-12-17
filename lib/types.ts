@@ -102,3 +102,17 @@ export interface Issue {
   updatedAt: string;
   resolvedAt?: string;
 }
+
+export type UserRole = 'master' | 'manager' | 'user';
+
+export interface UserInfo {
+  uid: string;
+  userId: string;            // 로그인용 아이디 (required)
+  username: string;          // 화면 표시용 이름 (required)
+  email: string | null;      // 선택
+  displayName: string | null;
+  createdAt: string;
+  lastLoginAt: string;
+  provider: string;
+  role?: UserRole;
+}

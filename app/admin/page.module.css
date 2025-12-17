@@ -181,8 +181,15 @@
   margin: 2rem auto;
 }
 
+.actionButtons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .btnGrant,
-.btnRevoke {
+.btnRevoke,
+.btnDelete {
   padding: 0.5rem 1rem;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -199,15 +206,25 @@
 
 .btnGrant:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
 .btnRevoke {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
 }
 
 .btnRevoke:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+.btnDelete {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.btnDelete:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
 }
@@ -240,8 +257,13 @@
   }
 
   .btnGrant,
-  .btnRevoke {
+  .btnRevoke,
+  .btnDelete {
     padding: 0.4rem 0.75rem;
     font-size: 0.75rem;
+  }
+
+  .actionButtons {
+    flex-direction: column;
   }
 }

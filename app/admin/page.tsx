@@ -6,6 +6,7 @@ import {
   getUserRole,
   grantManagerRole,
   revokeAdminRole,
+  deleteUser,
   type UserRole
 } from '@/lib/admin';
 import { onAuthChange } from '@/lib/auth';
@@ -15,6 +16,8 @@ import styles from './page.module.css';
 
 interface UserInfo {
   uid: string;
+  userId: string;
+  username: string;
   email: string | null;
   displayName: string | null;
   createdAt: string;
@@ -84,7 +87,7 @@ export default function AdminPage() {
 
     const action = currentRole === 'manager' ? 'Manager 권한 제거' : 'Manager 권한 부여';
     const confirmed = window.confirm(
-      `${user.email || '사용자'}의 ${action}를 하시겠습니까?`
+      `${user.username || user.email || '사용자'}의 ${action}를 하시겠습니까?`
     );
 
     if (!confirmed) return;
@@ -102,6 +105,39 @@ export default function AdminPage() {
       alert(`${action}가 완료되었습니다.`);
     } else {
       alert(`${action}에 실패했습니다.`);
+    }
+  };
+
+  const handleDeleteUser = async (uid: string) => {
+    const user = users.find(u => u.uid === uid);
+    if (!user) return;
+
+    // Master만 삭제 가능
+    if (currentUserRole !== 'master') {
+      alert('Master만 계정을 삭제할 수 있습니다.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `정말로 ${user.username || user.email || '사용자'}의 계정을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며, 해당 사용자의 모든 데이터가 삭제됩니다.`
+    );
+
+    if (!confirmed) return;
+
+    // 한 번 더 확인
+    const doubleConfirmed = window.confirm(
+      `최종 확인: ${user.username || user.email}의 계정과 모든 데이터를 삭제합니다.`
+    );
+
+    if (!doubleConfirmed) return;
+
+    const { success, error } = await deleteUser(uid);
+
+    if (success) {
+      setUsers(users.filter(u => u.uid !== uid));
+      alert('계정이 삭제되었습니다.');
+    } else {
+      alert(`계정 삭제 실패: ${error}`);
     }
   };
 
@@ -143,7 +179,7 @@ export default function AdminPage() {
           <div className={styles.statValue}>
             {users.filter(u => u.provider === 'password').length}
           </div>
-          <div className={styles.statLabel}>이메일 계정</div>
+          <div className={styles.statLabel}>아이디 계정</div>
         </div>
       </div>
 
@@ -152,6 +188,8 @@ export default function AdminPage() {
           <thead>
             <tr>
               <th>UID</th>
+              <th>로그인ID</th>
+              <th>사용자명</th>
               <th>이메일</th>
               <th>이름</th>
               <th>가입 방법</th>
@@ -169,11 +207,13 @@ export default function AdminPage() {
               return (
                 <tr key={user.uid}>
                   <td className={styles.uid}>{user.uid}</td>
+                  <td>{user.userId || '-'}</td>
+                  <td>{user.username || '-'}</td>
                   <td>{user.email || '-'}</td>
                   <td>{user.displayName || '-'}</td>
                   <td>
                     <span className={styles.badge}>
-                      {user.provider === 'google.com' ? 'Google' : '이메일'}
+                      {user.provider === 'google.com' ? 'Google' : '아이디'}
                     </span>
                   </td>
                   <td>{user.createdAt}</td>
@@ -189,14 +229,22 @@ export default function AdminPage() {
                   </td>
                   <td>
                     {currentUserRole === 'master' && !isSelf && userRole !== 'master' ? (
-                      <button
-                        onClick={() => handleToggleRole(user.uid, userRole)}
-                        className={
-                          userRole === 'manager' ? styles.btnRevoke : styles.btnGrant
-                        }
-                      >
-                        {userRole === 'manager' ? '권한 제거' : 'Manager 지정'}
-                      </button>
+                      <div className={styles.actionButtons}>
+                        <button
+                          onClick={() => handleToggleRole(user.uid, userRole)}
+                          className={
+                            userRole === 'manager' ? styles.btnRevoke : styles.btnGrant
+                          }
+                        >
+                          {userRole === 'manager' ? '권한 제거' : 'Manager 지정'}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user.uid)}
+                          className={styles.btnDelete}
+                        >
+                          삭제
+                        </button>
+                      </div>
                     ) : (
                       <span className={styles.noAction}>-</span>
                     )}
