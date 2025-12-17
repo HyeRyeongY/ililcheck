@@ -28,11 +28,12 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  CornerDownRight,
   Edit3,
   MoreVertical,
   Plus,
   Trash2,
-  X,
+  X
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -1159,240 +1160,246 @@ export default function ProjectDetailPage() {
 
   return (
     <div className={styles.container}>
-      {/* 헤더 */}
-      <div
-        className={`${styles.header} ${isHeaderExpanded || showSettings ? styles.headerExpanded : ""}`}
-      >
-        <div className={styles.headerContent}>
-          <div className={styles.headerLeft}>
-            <div className={styles.titleSection}>
-              <div
-                className={styles.projectColorBox}
-                style={{
-                  backgroundColor: showSettings
-                    ? formData.color
-                    : project.color,
-                }}
-              />
-              {showSettings ? (
-                <input
-                  ref={titleInputRef}
-                  type="text"
-                  value={formData.name}
-                  onChange={e => {
-                    setFormData({ ...formData, name: e.target.value });
-                    setTimeout(autoResizeTitleInput, 0);
-                  }}
-                  className={styles.titleInput}
-                  autoFocus
-                />
-              ) : (
-                <h1 className={styles.title}>{project.name}</h1>
-              )}
-            </div>
-            <div className={styles.headerDates}>
-              {showSettings ? (
-                <DatePicker
-                  selectsRange={true}
-                  startDate={
-                    formData.startDate ? new Date(formData.startDate) : null
-                  }
-                  endDate={formData.endDate ? new Date(formData.endDate) : null}
-                  onChange={update => {
-                    const [start, end] = update;
-                    setFormData({
-                      ...formData,
-                      startDate: start
-                        ? new Date(
-                            start.getTime() - start.getTimezoneOffset() * 60000
-                          )
-                            .toISOString()
-                            .split("T")[0]
-                        : "",
-                      endDate: end
-                        ? new Date(
-                            end.getTime() - end.getTimezoneOffset() * 60000
-                          )
-                            .toISOString()
-                            .split("T")[0]
-                        : "",
-                    });
-                  }}
-                  customInput={
-                    <CustomDateInput
-                      value={
-                        formData.startDate
-                          ? `${formData.startDate} - ${formData.endDate || ""}`
-                          : ""
-                      }
-                    />
-                  }
-                  dateFormat="yyyy-MM-dd"
-                  popperPlacement="bottom-start"
-                  locale="ko"
-                />
-              ) : (
-                <p>{`${project.startDate} ~ ${project.endDate}`}</p>
-              )}
-            </div>
-          </div>
-          <div className={styles.headerActions}>
-            {showSettings ? (
-              <>
-                <button onClick={cancelEditing} className={styles.cancelButton}>
-                  <X className="w-4 h-4" />
-                  취소
-                </button>
-                <button onClick={performSave} className={styles.completeButton}>
-                  <Check className="w-4 h-4" />
-                  완료
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => setShowIssuePanel(!showIssuePanel)}
-                  className={`${styles.issueButton} ${
-                    showIssuePanel ? styles.issueButtonActive : ""
-                  }`}
-                >
-                  <AlertCircle className="w-4 h-4" />
-                  이슈사항 ({issues.length})
-                </button>
-                {isHeaderExpanded && (
-                  <>
-                    <button
-                      onClick={() => {
-                        setShowSettings(true);
-                        setIsHeaderExpanded(true);
-                      }}
-                      className={styles.editDescriptionButton}
-                    >
-                      <Edit3 className="w-4 h-4" />
-                      수정
-                    </button>
-                    <button
-                      onClick={handleDeleteProject}
-                      className={styles.deleteButton}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      삭제
-                    </button>
-                  </>
-                )}
-                <button
-                  onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
-                  className={`${styles.moreButton} ${
-                    isHeaderExpanded ? styles.moreButtonActive : ""
-                  }`}
-                >
-                  <MoreVertical className="w-5 h-5" />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-        {(isHeaderExpanded || showSettings) && (
-          <div className={styles.expandedHeaderContent}>
-            {showSettings ? (
-              <div className={styles.projectDetailBox}>
-                <label className={styles.label}>프로젝트 설명</label>
-                <textarea
-                  value={formData.description}
-                  onChange={e =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  className={styles.descriptionTextarea}
-                  rows={3}
-                />
-                <div className={styles.advancedSettings}>
-                  <div className={styles.categorySettings}>
-                    <label className={styles.label}>카테고리</label>
-                    <div className={styles.categoryButtons}>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setFormData({ ...formData, category: "personal" })
-                        }
-                        className={`${styles.categoryButton} ${
-                          formData.category === "personal"
-                            ? styles.categoryButtonSelected
-                            : styles.categoryButtonDefault
-                        }`}
-                      >
-                        개인
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setFormData({ ...formData, category: "work" })
-                        }
-                        className={`${styles.categoryButton} ${
-                          formData.category === "work"
-                            ? styles.categoryButtonSelected
-                            : styles.categoryButtonDefault
-                        }`}
-                      >
-                        업무
-                      </button>
-                    </div>
-                  </div>
-                  <div className={styles.colorSettings}>
-                    <label className={styles.label}>프로젝트 색상</label>
-                    <div className={styles.colorPalette}>
-                      {PRESET_COLORS.map(color => (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, color })}
-                          className={`${styles.colorButton} ${
-                            formData.color === color
-                              ? styles.colorButtonSelected
-                              : ""
-                          }`}
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div
-                className={`${styles.projectDetailBox} ${styles.descriptionContainer}`}
-              >
-                <p className={styles.descriptionArea}>
-                  {project.description || "설명이 없습니다."}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
       {/* 콘텐츠 영역 */}
       <div className={styles.content}>
         <div className={styles.contentInner}>
           {/* 작업 목록 */}
           <div className={styles.card}>
-            {/* 프로젝트 진행률 */}
+            {/* 프로젝트 진행률 및 정보 */}
             <div className={styles.progressSection}>
-              <DonutChart progress={currentProjectProgress} size="sm" />
+              <DonutChart
+                progress={currentProjectProgress}
+                size="sm"
+                color={showSettings ? formData.color : project.color}
+              />
               <div className={styles.progressInfo}>
-                <h3 className={styles.progressTitle}>{project.name}</h3>
-                <div className={styles.statsChips}>
-                  <span className={styles.statChip}>
-                    작업 {completedTasks} / {totalTasks}
-                  </span>
-                  <span className={styles.statChip}>
-                    할일 {completedTasks} / {totalTasks}
-                  </span>
+                <div className={styles.titleSection}>
+                  <div
+                    className={styles.projectColorBox}
+                    style={{
+                      backgroundColor: showSettings
+                        ? formData.color
+                        : project.color,
+                    }}
+                  />
+                  {showSettings ? (
+                    <input
+                      ref={titleInputRef}
+                      type="text"
+                      value={formData.name}
+                      onChange={e => {
+                        setFormData({ ...formData, name: e.target.value });
+                        setTimeout(autoResizeTitleInput, 0);
+                      }}
+                      className={styles.titleInput}
+                      autoFocus
+                    />
+                  ) : (
+                    <h3 className={styles.progressTitle}>{project.name}</h3>
+                  )}
                 </div>
+
+                <div className={styles.projectStatusInfo}>
+                  <div className={styles.statsChips}>
+                    <span className={styles.statChip}>
+                      작업 {completedTasks} / {totalTasks}
+                    </span>
+                    <span className={styles.statChip}>
+                      할일 {completedTasks} / {totalTasks}
+                    </span>
+                  </div>
+                  <div className={styles.headerDates}>
+                    {showSettings ? (
+                      <DatePicker
+                        selectsRange={true}
+                        startDate={
+                          formData.startDate ? new Date(formData.startDate) : null
+                        }
+                        endDate={formData.endDate ? new Date(formData.endDate) : null}
+                        onChange={update => {
+                          const [start, end] = update;
+                          setFormData({
+                            ...formData,
+                            startDate: start
+                              ? new Date(
+                                  start.getTime() - start.getTimezoneOffset() * 60000
+                                )
+                                  .toISOString()
+                                  .split("T")[0]
+                              : "",
+                            endDate: end
+                              ? new Date(
+                                  end.getTime() - end.getTimezoneOffset() * 60000
+                                )
+                                  .toISOString()
+                                  .split("T")[0]
+                              : "",
+                          });
+                        }}
+                        customInput={
+                          <CustomDateInput
+                            value={
+                              formData.startDate
+                                ? `${formData.startDate} - ${formData.endDate || ""}`
+                                : ""
+                            }
+                          />
+                        }
+                        dateFormat="yyyy-MM-dd"
+                        popperPlacement="bottom-start"
+                        locale="ko"
+                      />
+                    ) : (
+                      <p>{`${project.startDate} ~ ${project.endDate}`}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 액션 버튼들 */}
+              <div className={styles.headerActions}>
+                {showSettings ? (
+                  <>
+                    <button onClick={cancelEditing} className={styles.cancelButton}>
+                      <X className="w-4 h-4" />
+                      취소
+                    </button>
+                    <button onClick={handleSave} className={styles.completeButton}>
+                      <Check className="w-4 h-4" />
+                      완료
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setShowIssuePanel(!showIssuePanel)}
+                      className={`${styles.issueButton} ${
+                        showIssuePanel ? styles.issueButtonActive : ""
+                      }`}
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      이슈 <span className={styles.issueCount}>{issues.length}</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+                      className={`${styles.moreButton} ${
+                        isHeaderExpanded ? styles.moreButtonActive : ""
+                      }`}
+                    >
+                      <MoreVertical className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
+            {/* 확장된 설명 영역 - progressSection 외부 */}
+            <div
+              className={`${styles.expandedHeaderContent} ${
+                !(isHeaderExpanded || showSettings) ? styles.collapsed : ""
+              }`}
+            >
+              {showSettings ? (
+                <div className={styles.projectDetailBox}>
+                  <label className={styles.label}>프로젝트 설명</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={e =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    className={styles.descriptionTextarea}
+                    rows={3}
+                  />
+                  <div className={styles.advancedSettings}>
+                    <div className={styles.categorySettings}>
+                      <label className={styles.label}>카테고리</label>
+                      <div className={styles.categoryButtons}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({ ...formData, category: "personal" })
+                          }
+                          className={`${styles.categoryButton} ${
+                            formData.category === "personal"
+                              ? styles.categoryButtonSelected
+                              : styles.categoryButtonDefault
+                          }`}
+                        >
+                          개인
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({ ...formData, category: "work" })
+                          }
+                          className={`${styles.categoryButton} ${
+                            formData.category === "work"
+                              ? styles.categoryButtonSelected
+                              : styles.categoryButtonDefault
+                          }`}
+                        >
+                          업무
+                        </button>
+                      </div>
+                    </div>
+                    <div className={styles.colorSettings}>
+                      <label className={styles.label}>프로젝트 색상</label>
+                      <div className={styles.colorPalette}>
+                        {PRESET_COLORS.map(color => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, color })}
+                            className={`${styles.colorButton} ${
+                              formData.color === color
+                                ? styles.colorButtonSelected
+                                : ""
+                            }`}
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className={styles.projectDetailBox}>
+                    <p className={styles.descriptionArea}>
+                      {project.description || "설명이 없습니다."}
+                    </p>
+                  </div>
+                  {isHeaderExpanded && (
+                    <div className={styles.descriptionActions}>
+                      <button
+                        onClick={() => {
+                          setShowSettings(true);
+                          setIsHeaderExpanded(true);
+                        }}
+                        className={styles.editDescriptionButton}
+                      >
+                        <Edit3 className="w-4 h-4" />
+                        수정
+                      </button>
+                      <button
+                        onClick={handleDeleteProject}
+                        className={styles.deleteButton}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        삭제
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
             <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>작업 목록</h2>
+              <div className={styles.cardTitleWrapper}>
+                <h2 className={styles.cardTitle}>작업 목록</h2>
+                <span className={styles.cardTitleGuide}>작업 &gt; 할일</span>
+              </div>
 
               <button
                 onClick={handleAddNewTask}
@@ -1454,7 +1461,10 @@ export default function ProjectDetailPage() {
               (tasks.length > 0 || isAddingTask) && (
                 <div className={styles.tasksSection}>
                   {tasks.map(task => (
-                    <div key={task.id} className={styles.taskItem}>
+                    <div
+                      key={task.id}
+                      className={`${styles.taskItem} ${expandedTasks.has(task.id) ? styles.taskItemExpanded : ""}`}
+                    >
                       <div
                         className={`${styles.taskHeader} ${styles.taskHeaderClickable}`}
                         onClick={e => {
@@ -1514,6 +1524,7 @@ export default function ProjectDetailPage() {
                                   {task.progress}
                                 </span>
                               </div>
+                             
                               {editingTaskId === task.id ? (
                                 <input
                                   type="text"
@@ -1546,6 +1557,20 @@ export default function ProjectDetailPage() {
                                 </div>
                               )}
                             </div>
+
+                            {task.todos.length === 0 && (
+                              <div className={styles.taskProgressContainer}>
+                                <ProgressDots
+                                  progress={task.progress}
+                                  size="sm"
+                                  onChange={progress =>
+                                    updateTaskProgress(task.id, progress)
+                                  }
+                                />
+                              </div>
+                            )}
+                             
+
                             <div className={styles.todoBadge}>
                               {task.todos.length > 0
                                 ? `할 일 ${
@@ -1554,12 +1579,7 @@ export default function ProjectDetailPage() {
                                     ).length
                                   }/${task.todos.length}`
                                 : "할 일 없음"}
-                              &nbsp;•&nbsp;
-                              {task.progress === 100
-                                ? "완료"
-                                : task.progress > 0
-                                  ? "진행 중"
-                                  : "시작 전"}
+                              
                             </div>
                             <button
                               onClick={e => {
@@ -1575,19 +1595,7 @@ export default function ProjectDetailPage() {
 
                           {/* 아래 행*/}
                           <div className={styles.taskHeaderBottom}>
-                            <div className={styles.taskProgressContainer}>
-                              {task.todos.length === 0 ? (
-                                <ProgressDots
-                                  progress={task.progress}
-                                  size="sm"
-                                  onChange={progress =>
-                                    updateTaskProgress(task.id, progress)
-                                  }
-                                />
-                              ) : (
-                                ""
-                              )}
-                            </div>
+                            
                           </div>
                         </div>
                       </div>
@@ -1597,232 +1605,227 @@ export default function ProjectDetailPage() {
                       {expandedTasks.has(task.id) && (
                         <div className={styles.todoList}>
                           {/* 할일 목록 */}
-                          <div className={styles.todoGrid}>
-                            {task.todos.map(todo => (
-                              <div key={todo.id} className={styles.todoCard}>
-                                {/* 첫 번째 행: Progress Circle + Title */}
-                                <div className={styles.todoCardHeader}>
-                                  <div className={styles.todoProgressCircle}>
-                                    <DonutChart
-                                      progress={todo.progress}
-                                      size="xs"
-                                      color={
+                          {task.todos.map(todo => (
+                            <div key={todo.id} className={styles.todoCard}>
+                              {/* 첫 번째 행: Progress Circle + Title */}
+                              <div className={styles.todoCardHeader}>
+                                <CornerDownRight size={12} className={styles.icon} />
+                                <div className={styles.todoProgressCircle}>
+                                  <DonutChart
+                                    progress={todo.progress}
+                                    size="xs"
+                                    color={
+                                      todo.progress === 100
+                                        ? "#3b82f6" // 파란색
+                                        : todo.progress > 40
+                                          ? "#34d399" // 녹색
+                                          : todo.progress > 0
+                                            ? "#fbbf24" // 노란색
+                                            : "#e5e7eb" // 회색
+                                    }
+                                    showLabel={false}
+                                  />
+                                  <span
+                                    className={styles.progressPercent}
+                                    style={{
+                                      color:
                                         todo.progress === 100
-                                          ? "#3b82f6" // 파란색
+                                          ? "#3b82f6"
                                           : todo.progress > 40
-                                            ? "#34d399" // 녹색
+                                            ? "#34d399"
                                             : todo.progress > 0
-                                              ? "#fbbf24" // 노란색
-                                              : "#e5e7eb" // 회색
+                                              ? "#fbbf24"
+                                              : "#9ca3af",
+                                    }}
+                                  >
+                                    {todo.progress}
+                                  </span>
+                                </div>
+                                {editingTodoId === todo.id ? (
+                                  <input
+                                    type="text"
+                                    value={editTodoName}
+                                    onChange={e =>
+                                      setEditTodoName(e.target.value)
+                                    }
+                                    onKeyDown={e => {
+                                      if (e.key === "Enter") {
+                                        saveEditingTodo(task.id, todo.id);
+                                      } else if (e.key === "Escape") {
+                                        cancelEditingTodo();
                                       }
-                                      showLabel={false}
-                                    />
+                                    }}
+                                    className={styles.editTodoInput}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <div
+                                    className={styles.todoCardTitleWrapper}
+                                    onClick={() =>
+                                      startEditingTodo(
+                                        task.id,
+                                        todo.id,
+                                        todo.title
+                                      )
+                                    }
+                                  >
                                     <span
-                                      className={styles.progressPercent}
-                                      style={{
-                                        color:
-                                          todo.progress === 100
-                                            ? "#3b82f6"
-                                            : todo.progress > 40
-                                              ? "#34d399"
-                                              : todo.progress > 0
-                                                ? "#fbbf24"
-                                                : "#9ca3af",
-                                      }}
+                                      className={`${styles.todoCardTitle} ${
+                                        todo.status === "completed"
+                                          ? styles.completed
+                                          : ""
+                                      }`}
                                     >
-                                      {todo.progress}
+                                      {todo.title}
                                     </span>
+                                    <Edit3 className={styles.editIcon} />
                                   </div>
-                                  {editingTodoId === todo.id ? (
-                                    <input
-                                      type="text"
-                                      value={editTodoName}
-                                      onChange={e =>
-                                        setEditTodoName(e.target.value)
+                                )}
+                              </div>
+
+                              {/* 두 번째 행: Progress Buttons */}
+                              <div className={styles.todoCardProgress}>
+                                <ProgressDots
+                                  progress={todo.progress}
+                                  size="sm"
+                                  onChange={progress =>
+                                    updateTodoProgress(
+                                      task.id,
+                                      todo.id,
+                                      progress
+                                    )
+                                  }
+                                />
+                              </div>
+
+                              {/* 세 번째 행: 날짜 + Delete */}
+                                <div className={styles.todoCardDates}>
+                                  {editingTodoDate === todo.id ? (
+                                    <DatePicker
+                                      selected={
+                                        todo.startDate
+                                          ? new Date(todo.startDate)
+                                          : null
                                       }
-                                      onKeyDown={e => {
-                                        if (e.key === "Enter") {
-                                          saveEditingTodo(task.id, todo.id);
-                                        } else if (e.key === "Escape") {
-                                          cancelEditingTodo();
-                                        }
-                                      }}
-                                      className={styles.editTodoInput}
+                                      onChange={date =>
+                                        updateTodoStartDate(
+                                          task.id,
+                                          todo.id,
+                                          date
+                                        )
+                                      }
+                                      onClickOutside={() =>
+                                        cancelEditingTodoDate()
+                                      }
+                                      placeholderText="시작일 선택"
+                                      dateFormat="yyyy-MM-dd"
+                                      className={styles.todoDatePickerInline}
+                                      locale="ko"
+                                      isClearable
                                       autoFocus
                                     />
                                   ) : (
-                                    <div
-                                      className={styles.todoCardTitleWrapper}
+                                    <span
+                                      className={`${styles.todoDateLabel} ${styles.clickable}`}
                                       onClick={() =>
-                                        startEditingTodo(
-                                          task.id,
-                                          todo.id,
-                                          todo.title
-                                        )
+                                        startEditingTodoDate(todo.id)
                                       }
+                                      title="클릭하여 시작일 설정"
                                     >
-                                      <span
-                                        className={`${styles.todoCardTitle} ${
-                                          todo.status === "completed"
-                                            ? styles.completed
-                                            : ""
-                                        }`}
-                                      >
-                                        {todo.title}
-                                      </span>
-                                      <Edit3 className={styles.editIcon} />
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className={styles.todoCardBody}>
-                                  {/* 두 번째 행: Progress Buttons */}
-                                  <div className={styles.todoCardProgress}>
-                                    <ProgressDots
-                                      progress={todo.progress}
-                                      size="sm"
-                                      onChange={progress =>
-                                        updateTodoProgress(
-                                          task.id,
-                                          todo.id,
-                                          progress
-                                        )
-                                      }
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* 세 번째 행: 날짜 + Delete */}
-                                <div className={styles.todoCardFooter}>
-                                  <div className={styles.todoCardDates}>
-                                    {editingTodoDate === todo.id ? (
-                                      <DatePicker
-                                        selected={
-                                          todo.startDate
-                                            ? new Date(todo.startDate)
-                                            : null
-                                        }
-                                        onChange={date =>
-                                          updateTodoStartDate(
-                                            task.id,
-                                            todo.id,
-                                            date
-                                          )
-                                        }
-                                        onClickOutside={() =>
-                                          cancelEditingTodoDate()
-                                        }
-                                        placeholderText="시작일 선택"
-                                        dateFormat="yyyy-MM-dd"
-                                        className={styles.todoDatePickerInline}
-                                        locale="ko"
-                                        isClearable
-                                        autoFocus
-                                      />
-                                    ) : (
-                                      <span
-                                        className={`${styles.todoDateLabel} ${styles.clickable}`}
-                                        onClick={() =>
-                                          startEditingTodoDate(todo.id)
-                                        }
-                                        title="클릭하여 시작일 설정"
-                                      >
-                                        <Calendar className={styles.dateIcon} />
-                                        시작:{" "}
-                                        {todo.startDate
-                                          ? new Date(
-                                              todo.startDate
-                                            ).toLocaleDateString("ko-KR", {
-                                              month: "short",
-                                              day: "numeric",
-                                            })
-                                          : "-"}
-                                      </span>
-                                    )}
-                                    <span className={styles.todoDateLabel}>
                                       <Calendar className={styles.dateIcon} />
-                                      완료:{" "}
-                                      {todo.completedDate
+                                      시작:{" "}
+                                      {todo.startDate
                                         ? new Date(
-                                            todo.completedDate
+                                            todo.startDate
                                           ).toLocaleDateString("ko-KR", {
                                             month: "short",
                                             day: "numeric",
                                           })
                                         : "-"}
                                     </span>
-                                  </div>
-                                  <button
-                                    onClick={() =>
-                                      handleTodoDelete(task.id, todo.id)
-                                    }
-                                    className={styles.todoCardDeleteBtn}
-                                    title="삭제"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </button>
+                                  )}
+                                  <span className={styles.todoDateLabel}>
+                                    <Calendar className={styles.dateIcon} />
+                                    완료:{" "}
+                                    {todo.completedDate
+                                      ? new Date(
+                                          todo.completedDate
+                                        ).toLocaleDateString("ko-KR", {
+                                          month: "short",
+                                          day: "numeric",
+                                        })
+                                      : "-"}
+                                  </span>
                                 </div>
-                              </div>
-                            ))}
-
-                            {/* 할일 추가 버튼 또는 입력 카드 */}
-                            {isAddingTodo === task.id ? (
-                              <div className={styles.addTodoInputCard}>
-                                <input
-                                  type="text"
-                                  className={styles.todoInputInCard}
-                                  placeholder="할일 이름을 입력하세요"
-                                  value={newTodoName}
-                                  onChange={e => setNewTodoName(e.target.value)}
-                                  autoFocus
-                                  onKeyDown={e => {
-                                    if (
-                                      e.key === "Enter" &&
-                                      newTodoName.trim()
-                                    ) {
-                                      createNewTodo(task.id);
-                                    } else if (e.key === "Escape") {
-                                      setIsAddingTodo(null);
-                                      setNewTodoName("");
-                                    }
-                                  }}
-                                />
-                                <div className={styles.todoInputCardActions}>
-                                  <button
-                                    onClick={() => {
-                                      setIsAddingTodo(null);
-                                      setNewTodoName("");
-                                    }}
-                                    className={styles.cancelTodoBtn}
-                                  >
-                                    취소
-                                  </button>
-                                  <button
-                                    onClick={() => createNewTodo(task.id)}
-                                    className={styles.saveTodoBtn}
-                                    disabled={!newTodoName.trim()}
-                                  >
-                                    저장
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => {
-                                  if (!expandedTasks.has(task.id)) {
-                                    toggleTaskExpansion(task.id);
+                                <button
+                                  onClick={() =>
+                                    handleTodoDelete(task.id, todo.id)
                                   }
-                                  setIsAddingTodo(task.id);
+                                  className={styles.todoCardDeleteBtn}
+                                  title="삭제"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                            </div>
+                          ))}
+
+                          {/* 할일 추가 버튼 또는 입력 카드 */}
+                          {isAddingTodo === task.id ? (
+                            <div className={styles.addTodoInputCard}>
+                              <input
+                                type="text"
+                                className={styles.todoInputInCard}
+                                placeholder="할일 이름을 입력하세요"
+                                value={newTodoName}
+                                onChange={e => setNewTodoName(e.target.value)}
+                                autoFocus
+                                onKeyDown={e => {
+                                  if (
+                                    e.key === "Enter" &&
+                                    newTodoName.trim()
+                                  ) {
+                                    createNewTodo(task.id);
+                                  } else if (e.key === "Escape") {
+                                    setIsAddingTodo(null);
+                                    setNewTodoName("");
+                                  }
                                 }}
-                                className={styles.addTodoCard}
-                              >
-                                <Plus className={styles.addTodoIcon} />
-                                <span className={styles.addTodoText}>
-                                  할일 추가
-                                </span>
-                              </button>
-                            )}
-                          </div>
+                              />
+                              <div className={styles.todoInputCardActions}>
+                                <button
+                                  onClick={() => {
+                                    setIsAddingTodo(null);
+                                    setNewTodoName("");
+                                  }}
+                                  className={styles.cancelTodoBtn}
+                                >
+                                  취소
+                                </button>
+                                <button
+                                  onClick={() => createNewTodo(task.id)}
+                                  className={styles.saveTodoBtn}
+                                  disabled={!newTodoName.trim()}
+                                >
+                                  저장
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                if (!expandedTasks.has(task.id)) {
+                                  toggleTaskExpansion(task.id);
+                                }
+                                setIsAddingTodo(task.id);
+                              }}
+                              className={styles.addTodoCard}
+                            >
+                              <Plus className={styles.addTodoIcon} />
+                              <span className={styles.addTodoText}>
+                                할일 추가
+                              </span>
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

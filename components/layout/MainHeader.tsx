@@ -3,7 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { checkAdminStatus } from "@/lib/admin";
 import { logout } from "@/lib/auth";
-import { LogOut, MoreVertical, Settings, Shield } from "lucide-react";
+import { LogOut, MessageCircleHeart, MoreVertical, Settings, Shield } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import styles from "./MainHeader.module.css";
@@ -52,12 +52,8 @@ export default function MainHeader() {
 
       <div className={styles.right}>
         <span className={styles.welcome}>
-          <b>{user?.displayName || "사용자"}</b> 님 환영합니다 :)
+          <b>{user?.displayName || "사용자"}</b> 님 환영합니다 <MessageCircleHeart className={styles.icon}/>
         </span>
-
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          <LogOut className={styles.icon} />
-        </button>
 
         <div className={styles.menuContainer} ref={menuRef}>
           <button
@@ -99,6 +95,9 @@ export default function MainHeader() {
             </div>
           )}
         </div>
+        <button onClick={handleLogout} className={styles.logoutButton}>
+            <LogOut className={styles.icon} />
+          </button>
       </div>
     </header>
   );
