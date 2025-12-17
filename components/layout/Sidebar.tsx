@@ -3,11 +3,9 @@
 import CreateProjectModal from "@/components/modals/CreateProjectModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategory } from "@/contexts/CategoryContext";
-import { checkAdminStatus } from "@/lib/admin";
 import { fetchProjects } from "@/lib/api";
-import { logout } from "@/lib/auth";
 import type { Project, ProjectCategory } from "@/lib/types";
-import { Calendar, FileText, Home, LogOut, Plus, Shield } from "lucide-react";
+import { Calendar, FileText, Home, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -27,12 +25,10 @@ export default function Sidebar() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   const loadProjects = async () => {
     if (!user) {
       setProjects([]);
-      setIsAdmin(false);
       setLoading(false);
       return;
     }
@@ -41,10 +37,6 @@ export default function Sidebar() {
       // 프로젝트 로드
       const userProjects = await fetchProjects();
       setProjects(userProjects);
-
-      // 관리자 권한 확인
-      const adminStatus = await checkAdminStatus(user.uid);
-      setIsAdmin(adminStatus);
     } catch (error) {
       console.error("프로젝트 로드 실패:", error);
       setProjects([]);
@@ -115,10 +107,6 @@ export default function Sidebar() {
     };
   }, []);
 
-  const handleLogout = async () => {
-    await logout();
-  };
-
   const handleProjectCreated = (newProject: Project) => {
     // 프로젝트 목록 상태를 직접 업데이트
     setProjects([...projects, newProject]);
@@ -160,9 +148,9 @@ export default function Sidebar() {
   return (
     <div className={styles.container}>
       {/* 헤더 */}
-      <div className={styles.header}>
+      {/* <div className={styles.header}>
         <h1 className={styles.headerTitle}>ililcheck</h1>
-      </div>
+      </div> */}
 
       {/* 탭 */}
       <div className={styles.tabs}>
@@ -279,38 +267,6 @@ export default function Sidebar() {
               );
             })}
         </div>
-      </div>
-      {/* Master 또는 Manager: 관리자 페이지 링크 */}
-      {isAdmin && (
-        <div className={styles.adminLink}>
-          <Link
-            href="/admin"
-            className={`${styles.navLink}  ${
-              pathname === "/admin"
-                ? styles.navLinkActive
-                : styles.navLinkInactive
-            }`}
-          >
-            <Shield
-              className={`${styles.navIcon} ${
-                pathname === "/admin"
-                  ? styles.navIconActive
-                  : styles.navIconInactive
-              }`}
-            />
-            관리자
-          </Link>
-        </div>
-      )}
-      {/* 로그아웃 버튼 */}
-      <div className={styles.logoutSection}>
-        <div className={styles.userInfo}>
-          <p className={styles.userEmail}>{user?.email}</p>
-        </div>
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          <LogOut className={styles.logoutIcon} />
-          로그아웃
-        </button>
       </div>
 
       {/* 프로젝트 생성 모달 */}

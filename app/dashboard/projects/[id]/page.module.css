@@ -325,7 +325,7 @@
 
 /* 진행률 섹션 */
 .progressSection { margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; gap: 1rem;}
-.progressInfo { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; width: 100%; }
+.progressInfo { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 0.5rem; width: 100%; }
 .progressTitle { font-size: 1rem; font-weight: 600; color: #111827; margin-right: 0.75rem; }
 
 .statsChips{

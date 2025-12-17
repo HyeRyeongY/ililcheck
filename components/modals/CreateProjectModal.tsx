@@ -18,6 +18,18 @@ const PRESET_COLORS = [
   '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788'
 ];
 
+// 모바일/태블릿 기기인지 확인하는 함수
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+  const isTabletUA = /ipad|android(?!.*mobile)|tablet/i.test(userAgent);
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+  return isMobileUA || isTabletUA || isTouchDevice;
+};
+
 export default function CreateProjectModal({ isOpen, onClose, onSuccess, defaultCategory = 'personal' }: CreateProjectModalProps) {
   const [formData, setFormData] = useState({
     name: '',
@@ -27,6 +39,12 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, default
     color: PRESET_COLORS[0],
     category: defaultCategory as ProjectCategory
   });
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // 클라이언트 사이드에서만 실행
+    setIsMobile(isMobileDevice());
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -107,8 +125,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, default
   };
 
   return (
-    <div className={styles.overlay} onClick={handleClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={`${styles.overlay} ${isMobile ? styles.overlayMobile : ''}`} onClick={handleClose}>
+      <div className={`${styles.modal} ${isMobile ? styles.modalMobile : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h2 className={styles.title}>새 프로젝트 만들기</h2>
           <button onClick={handleClose} className={styles.closeButton}>
