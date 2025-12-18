@@ -25,6 +25,8 @@ import {
   closestCenter,
   DndContext,
   DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -172,10 +174,12 @@ const SortableTask: React.FC<SortableTaskProps> = ({
     isDragging,
   } = useSortable({ id: task.id });
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0 : 1,
+    // 드래그 중에도 원래 높이 유지하여 레이아웃 안정성 확보
+    visibility: isDragging ? 'hidden' : 'visible',
   };
 
   return (
@@ -323,6 +327,7 @@ interface SortableTodoProps {
   editingTodoId: string | null;
   editTodoName: string;
   editingTodoDate: string | null;
+  expandedTodoDate: string | null;
   onStartEditingTodo: (taskId: string, todoId: string, title: string) => void;
   onSaveEditingTodo: (taskId: string, todoId: string) => void;
   onCancelEditingTodo: () => void;
@@ -333,7 +338,13 @@ interface SortableTodoProps {
   ) => void;
   onStartEditingTodoDate: (todoId: string) => void;
   onCancelEditingTodoDate: () => void;
+  onToggleDateExpansion: (todoId: string | null) => void;
   onUpdateTodoStartDate: (
+    taskId: string,
+    todoId: string,
+    date: Date | null
+  ) => void;
+  onUpdateTodoCompletedDate: (
     taskId: string,
     todoId: string,
     date: Date | null
@@ -348,13 +359,16 @@ const SortableTodo: React.FC<SortableTodoProps> = ({
   editingTodoId,
   editTodoName,
   editingTodoDate,
+  expandedTodoDate,
   onStartEditingTodo,
   onSaveEditingTodo,
   onCancelEditingTodo,
   onUpdateTodoProgress,
   onStartEditingTodoDate,
   onCancelEditingTodoDate,
+  onToggleDateExpansion,
   onUpdateTodoStartDate,
+  onUpdateTodoCompletedDate,
   onTodoDelete,
   setEditTodoName,
 }) => {
@@ -367,10 +381,12 @@ const SortableTodo: React.FC<SortableTodoProps> = ({
     isDragging,
   } = useSortable({ id: todo.id });
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0 : 1,
+    // 드래그 중에도 원래 높이 유지하여 레이아웃 안정성 확보
+    visibility: isDragging ? 'hidden' : 'visible',
   };
 
   return (
@@ -450,44 +466,100 @@ const SortableTodo: React.FC<SortableTodoProps> = ({
           onChange={progress => onUpdateTodoProgress(taskId, todo.id, progress)}
         />
       </div>
-      {editingTodoDate === todo.id ? (
-        <DatePicker
-          selected={todo.startDate ? new Date(todo.startDate) : null}
-          onChange={date => onUpdateTodoStartDate(taskId, todo.id, date)}
-          onClickOutside={() => onCancelEditingTodoDate()}
-          placeholderText="시작일 선택"
-          dateFormat="yyyy-MM-dd"
-          className={styles.todoDatePickerInline}
-          locale="ko"
-          isClearable
-          autoFocus
-        />
-      ) : (
-        <span
-          className={`${styles.todoDateLabel} ${styles.clickable}`}
-          onClick={() => onStartEditingTodoDate(todo.id)}
-          title="클릭하여 시작일 설정"
-        >
-          <Calendar className={styles.dateIcon} />
-          시작:{" "}
-          {todo.startDate
-            ? new Date(todo.startDate).toLocaleDateString("ko-KR", {
-                month: "short",
-                day: "numeric",
-              })
-            : "-"}
-        </span>
-      )}
-      <span className={styles.todoDateLabel}>
-        <Calendar className={styles.dateIcon} />
-        완료:{" "}
-        {todo.completedDate
-          ? new Date(todo.completedDate).toLocaleDateString("ko-KR", {
-              month: "short",
-              day: "numeric",
-            })
-          : "-"}
-      </span>
+      <div className={styles.todoCardDates}>
+        {expandedTodoDate === todo.id ? (
+          <div className={styles.todoDateExpanded}>
+            <div className={styles.todoDateRow}>
+              <span className={styles.todoDateRowLabel}>시작일:</span>
+              {editingTodoDate === `${todo.id}-start` ? (
+                <DatePicker
+                  selected={todo.startDate ? new Date(todo.startDate) : null}
+                  onChange={date => {
+                    onUpdateTodoStartDate(taskId, todo.id, date);
+                    onCancelEditingTodoDate();
+                  }}
+                  onClickOutside={() => onCancelEditingTodoDate()}
+                  placeholderText="선택"
+                  dateFormat="yyyy-MM-dd"
+                  className={styles.todoDatePickerInline}
+                  locale="ko"
+                  isClearable
+                  autoFocus
+                />
+              ) : (
+                <>
+                  <span className={styles.todoDateRowValue}>
+                    {todo.startDate
+                      ? new Date(todo.startDate).toLocaleDateString("ko-KR", {
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "-"}
+                  </span>
+                  <button
+                    className={styles.todoDateEditBtn}
+                    onClick={() => onStartEditingTodoDate(`${todo.id}-start`)}
+                    title="시작일 수정"
+                  >
+                    <Edit3 className="w-3 h-3" />
+                  </button>
+                </>
+              )}
+            </div>
+            <div className={styles.todoDateRow}>
+              <span className={styles.todoDateRowLabel}>완료일:</span>
+              {editingTodoDate === `${todo.id}-completed` ? (
+                <DatePicker
+                  selected={todo.completedDate ? new Date(todo.completedDate) : null}
+                  onChange={date => {
+                    onUpdateTodoCompletedDate(taskId, todo.id, date);
+                    onCancelEditingTodoDate();
+                  }}
+                  onClickOutside={() => onCancelEditingTodoDate()}
+                  placeholderText="선택"
+                  dateFormat="yyyy-MM-dd"
+                  className={styles.todoDatePickerInline}
+                  locale="ko"
+                  isClearable
+                  autoFocus
+                />
+              ) : (
+                <>
+                  <span className={styles.todoDateRowValue}>
+                    {todo.completedDate
+                      ? new Date(todo.completedDate).toLocaleDateString("ko-KR", {
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "-"}
+                  </span>
+                  <button
+                    className={styles.todoDateEditBtn}
+                    onClick={() => onStartEditingTodoDate(`${todo.id}-completed`)}
+                    title="완료일 수정"
+                  >
+                    <Edit3 className="w-3 h-3" />
+                  </button>
+                </>
+              )}
+            </div>
+            <button
+              className={styles.todoDateCollapseBtn}
+              onClick={() => onToggleDateExpansion(null)}
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        ) : (
+          <button
+            className={`${styles.todoDateIcon} ${(todo.startDate || todo.completedDate) ? styles.hasDate : ''}`}
+            onClick={() => onToggleDateExpansion(todo.id)}
+            title="날짜 정보 보기"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
       <button
         onClick={() => onTodoDelete(taskId, todo.id)}
         className={styles.todoCardDeleteBtn}
@@ -540,6 +612,11 @@ export default function ProjectDetailPage() {
   const [editTaskName, setEditTaskName] = useState("");
   const [editTodoName, setEditTodoName] = useState("");
   const [editingTodoDate, setEditingTodoDate] = useState<string | null>(null);
+  const [expandedTodoDate, setExpandedTodoDate] = useState<string | null>(null);
+
+  // 드래그 앤 드롭 상태
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [activeTodoId, setActiveTodoId] = useState<string | null>(null);
 
   // 팝업 상태
   const [dialog, setDialog] = useState<{
@@ -572,9 +649,16 @@ export default function ProjectDetailPage() {
     })
   );
 
+  // 작업 드래그 시작 핸들러
+  const handleTaskDragStart = (event: DragStartEvent) => {
+    setActiveTaskId(event.active.id as string);
+  };
+
   // 작업 드래그 앤 드롭 핸들러
   const handleTaskDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+
+    setActiveTaskId(null);
 
     if (!over || active.id === over.id) return;
 
@@ -601,9 +685,16 @@ export default function ProjectDetailPage() {
     }
   };
 
+  // 할일 드래그 시작 핸들러
+  const handleTodoDragStart = (event: DragStartEvent) => {
+    setActiveTodoId(event.active.id as string);
+  };
+
   // 할일 드래그 앤 드롭 핸들러
   const handleTodoDragEnd = (taskId: string) => (event: DragEndEvent) => {
     const { active, over } = event;
+
+    setActiveTodoId(null);
 
     if (!over || active.id === over.id) return;
 
@@ -1412,6 +1503,34 @@ export default function ProjectDetailPage() {
     setEditingTodoDate(null);
   };
 
+  // 할일 완료일 업데이트
+  const updateTodoCompletedDate = async (
+    taskId: string,
+    todoId: string,
+    newDate: Date | null
+  ) => {
+    const dateString = newDate
+      ? new Date(
+          newDate.getTime() - newDate.getTimezoneOffset() * 60000
+        ).toISOString()
+      : undefined;
+
+    try {
+      // Firebase에 할일 완료일 업데이트
+      await updateTodo(todoId, {
+        completedDate: dateString,
+        updatedAt: new Date().toISOString(),
+      });
+
+      // 작업 목록 새로고침
+      await reloadTasks();
+    } catch (error) {
+      console.error("할일 완료일 업데이트 실패:", error);
+    }
+
+    setEditingTodoDate(null);
+  };
+
   // 할일 편집 저장
   const saveEditingTodo = async (taskId: string, todoId: string) => {
     if (!editTodoName.trim()) return;
@@ -1991,6 +2110,7 @@ export default function ProjectDetailPage() {
                     <DndContext
                       sensors={sensors}
                       collisionDetection={closestCenter}
+                      onDragStart={handleTaskDragStart}
                       onDragEnd={handleTaskDragEnd}
                     >
                       <SortableContext
@@ -2035,6 +2155,7 @@ export default function ProjectDetailPage() {
                                   <DndContext
                                     sensors={sensors}
                                     collisionDetection={closestCenter}
+                                    onDragStart={handleTodoDragStart}
                                     onDragEnd={handleTodoDragEnd(task.id)}
                                   >
                                     <SortableContext
@@ -2049,6 +2170,7 @@ export default function ProjectDetailPage() {
                                           editingTodoId={editingTodoId}
                                           editTodoName={editTodoName}
                                           editingTodoDate={editingTodoDate}
+                                          expandedTodoDate={expandedTodoDate}
                                           onStartEditingTodo={startEditingTodo}
                                           onSaveEditingTodo={saveEditingTodo}
                                           onCancelEditingTodo={
@@ -2063,14 +2185,27 @@ export default function ProjectDetailPage() {
                                           onCancelEditingTodoDate={
                                             cancelEditingTodoDate
                                           }
+                                          onToggleDateExpansion={setExpandedTodoDate}
                                           onUpdateTodoStartDate={
                                             updateTodoStartDate
+                                          }
+                                          onUpdateTodoCompletedDate={
+                                            updateTodoCompletedDate
                                           }
                                           onTodoDelete={handleTodoDelete}
                                           setEditTodoName={setEditTodoName}
                                         />
                                       ))}
                                     </SortableContext>
+                                    <DragOverlay>
+                                      {activeTodoId ? (
+                                        <div className={styles.dragOverlayTodo}>
+                                          <span className={styles.todoCardTitle}>
+                                            {task.todos.find(t => t.id === activeTodoId)?.title}
+                                          </span>
+                                        </div>
+                                      ) : null}
+                                    </DragOverlay>
                                   </DndContext>
 
                                   {/* 할일 추가 버튼 또는 입력 카드 */}
@@ -2140,6 +2275,23 @@ export default function ProjectDetailPage() {
                           ))}
                         </div>
                       </SortableContext>
+                      <DragOverlay>
+                        {activeTaskId ? (
+                          <div className={styles.dragOverlayTask}>
+                            <div className={styles.taskHeader}>
+                              <div className={styles.taskHeaderContent}>
+                                <div className={styles.taskHeaderTop}>
+                                  <div className={styles.taskTitleSection}>
+                                    <h4 className={styles.taskTitle}>
+                                      {tasks.find(t => t.id === activeTaskId)?.title}
+                                    </h4>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : null}
+                      </DragOverlay>
                     </DndContext>
                   )
                 )}
