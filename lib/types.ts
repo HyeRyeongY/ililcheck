@@ -33,6 +33,7 @@ export interface Task {
   startDate?: string;
   completedDate?: string;
   todos: Todo[];
+  order?: number;
 }
 
 export interface Todo {
@@ -46,6 +47,7 @@ export interface Todo {
   updatedAt: string;
   startDate?: string;
   completedDate?: string;
+  order?: number;
 }
 
 export interface DailyReport {

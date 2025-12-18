@@ -709,11 +709,12 @@ export async function fetchTodosByTask(taskId: string, userId: string): Promise<
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         startDate: data.startDate,
         completedDate: data.completedDate,
+        order: data.order ?? 0,
       };
     });
 
-    // 클라이언트 측에서 정렬 (createdAt 기준 내림차순)
-    return todos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    // 클라이언트 측에서 정렬 (order 기준 오름차순)
+    return todos.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   } catch (error) {
     console.error('할일 조회 실패:', error);
     return [];
@@ -894,11 +895,12 @@ export async function fetchTodosByUser(userId: string, date?: string): Promise<T
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         startDate: data.startDate,
         completedDate: data.completedDate,
+        order: data.order ?? 0,
       };
     });
 
-    // 클라이언트 측에서 정렬 (createdAt 기준 내림차순)
-    return todos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    // 클라이언트 측에서 정렬 (order 기준 오름차순)
+    return todos.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   } catch (error) {
     console.error('사용자 할일 조회 실패:', error);
     return [];

@@ -4,6 +4,7 @@
   display: flex;
   flex-direction: column;
   background-color: #f9fafb;
+  position: relative;
 }
 
 .header {
@@ -409,27 +410,97 @@
 .emptyTaskState { text-align: center; padding: 3rem 2rem; border: 2px dashed #e5e7eb; border-radius: 0.5rem; }
 .emptyStateTitle { font-size: 1.125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; }
 .emptyStateText { color: #6b7280; }
-.tasksSection { display: flex; flex-direction: column; gap: 0.5rem; }
+.tasksSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: calc(100vh - 400px);
+  overflow-y: auto;
+  overflow-x: visible;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
 .taskItem {
+  position: relative;
   /* border: 1px solid #e5e7eb; */
-   border-radius: 0.5rem; background-color: white; overflow: hidden;
+   border-radius: 0.5rem; background-color: white;
   border: 1px solid transparent;
    transition: all 0.2s ease-in-out;
+   overflow: visible;
 }
 .taskItem:hover {
   background-color: #f9fafb;
 }
 .taskItemExpanded {
   /* background-color: #f9fafb; */
-  border-color: #d1d5db;
+  border-color: #e5e7eb;
   padding-top: 0.25rem;
 }
-.taskHeader { padding: 0.5rem; }
+
+/* 드래그 중인 요소 스타일 */
+.taskItem[data-dragging="true"] {
+  opacity: 0.3;
+}
+
+.taskItem[style*="transform"]:not([data-dragging="true"]) {
+  transform: scale(0.95) !important;
+  opacity: 0.8;
+  background-color: white;
+}
+.taskHeader {
+  padding: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  position: relative;
+}
 .taskHeaderClickable { cursor: pointer; transition: background-color 0.2s; }
 .taskHeaderClickable:hover { background-color: transparent; }
 
+/* 드래그 핸들 */
+.dragHandle {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0;
+  cursor: grab;
+  color: #d1d5db;
+  background-color: rgba(255, 255, 255, 0.8);
+  /* border: 1px solid #d1d5db; */
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.03);
+  border-radius: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+  z-index: 10;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.dragHandle:hover {
+  color: #6b7280;
+}
+
+.taskHeader:hover .dragHandle {
+  opacity: 1;
+}
+
+.todoCard:hover .dragHandle {
+  opacity: 1;
+}
+
 /* 작업 헤더 컨텐츠 */
-.taskHeaderContent { display: flex; flex-direction: column; }
+.taskHeaderContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
 
 /* 위 행: 토글 + 제목 + 할일추가 */
 .taskHeaderTop { display: flex; align-items: center; gap: 0.25rem; }
@@ -504,11 +575,12 @@
 .addTodoBtn:hover, .taskToggle:hover { background-color: #f3f4f6; color: #374151; }
 .deleteTaskBtn { padding: 0.25rem; border-radius: 0.375rem; color: #ef4444; transition: all 0.2s; background-color: transparent; border: none; cursor: pointer; }
 .deleteTaskBtn:hover { background-color: #fef2f2; color: #dc2626; }
-.todoList { 
+.todoList {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   padding: 0 0.5rem 0.5rem;
+  overflow: visible;
  }
 
 /* 할일 그리드 레이아웃 */
@@ -521,28 +593,35 @@
 
 /* 할일 카드 */
 .todoCard {
+  position: relative;
   background-color: transparent;
   border-radius: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem 0.25rem 1rem;
   display: flex;
   gap: 0.75rem;
+  align-items: center;
   transition: all 0.2s;
+  overflow: visible;
 }
 
 .todoCard:hover {
   background-color: rgba(0, 0, 0, 0.03);
 }
 
-.todoCardHeader {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1;
+/* 드래그 중인 할일 카드 스타일 */
+.todoCard[data-dragging="true"] {
+  opacity: 0.3;
 }
 
-.todoCardHeader .icon {
+.todoCard[style*="transform"]:not([data-dragging="true"]) {
+  transform: scale(0.95) !important;
+  opacity: 0.8;
+  background-color: white;
+}
+
+.todoCard .icon {
   color: #6b7280;
-  margin-left: 0.5rem;
+  flex-shrink: 0;
 }
 
 .todoProgressCircle {
@@ -562,14 +641,6 @@
   z-index: 10;
 }
 
-.todoCardBody {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
 .todoCardTitleWrapper {
   display: flex;
   align-items: flex-start;
@@ -577,6 +648,7 @@
   cursor: pointer;
   transition: all 0.2s;
   min-width: 0;
+  flex: 1;
 }
 
 .todoCardTitleWrapper:hover .todoCardTitle {
@@ -604,31 +676,24 @@
 .todoCardProgress {
   display: flex;
   justify-content: flex-start;
+  flex-shrink: 0;
 }
 
 .todoCardDates {
   display: flex;
   gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.todoCardFooter {
-  border-top: 1px solid #f3f4f6;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-shrink: 0;
 }
 
 .todoCardDeleteBtn {
   padding: 0.25rem;
   border-radius: 0.25rem;
   color: #9ca3af;
-  background-color: transparent;
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   opacity: 0;
-  flex-shrink: 0;
+  /* box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.05); */
 }
 
 .todoCard:hover .todoCardDeleteBtn {
@@ -1264,4 +1329,188 @@
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.3);
   z-index: 999;
+}
+
+/* Floating 모드 토글 버튼 */
+.floatingToggle {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  gap: 0.25rem;
+  background-color: #f3f4f6;
+  padding: 0.25rem;
+  border-radius: 3rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.floatingButton {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 3rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  background-color: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.floatingButton:hover {
+  color: #374151;
+}
+
+.floatingButtonActive {
+  background-color: white;
+  color: #3b82f6;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.buttonIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* 요약모드 스타일 */
+.summaryMode {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.summaryTasksList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.summaryTaskItem {
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.summaryTaskItem:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.summaryTaskHeader {
+  margin-bottom: 0.75rem;
+}
+
+.summaryTaskTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.summaryTaskProgressCircle {
+  flex-shrink: 0;
+}
+
+.summaryTaskTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  flex: 1;
+}
+
+.summaryTaskProgress {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #3b82f6;
+  background-color: #eff6ff;
+  padding: 0.25rem 0.625rem;
+  border-radius: 1rem;
+  flex-shrink: 0;
+}
+
+.summaryTodosList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.summaryTodoItem {
+  background-color: white;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+}
+
+.summaryTodoItem:hover {
+  background-color: #f9fafb;
+}
+
+.summaryTodoTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.summaryTodoLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.summaryTodoStatus {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.summaryTodoStatus.todo {
+  background-color: #d1d5db;
+}
+
+.summaryTodoStatus.in_progress {
+  background-color: #3b82f6;
+}
+
+.summaryTodoStatus.completed {
+  background-color: #22c55e;
+}
+
+.summaryTodoStatus.on_hold {
+  background-color: #f59e0b;
+}
+
+.summaryTodoIcon {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.summaryTodoTitle {
+  font-size: 0.875rem;
+  color: #374151;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summaryTodoProgress {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.75rem;
+  flex-shrink: 0;
 }
