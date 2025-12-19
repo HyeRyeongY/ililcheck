@@ -3,6 +3,7 @@
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DonutChart from "@/components/ui/DonutChart";
 import ProgressDots from "@/components/ui/ProgressDots";
+import EditProjectDrawer from "@/components/modals/EditProjectDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   createIssue,
@@ -44,12 +45,12 @@ import { ko } from "date-fns/locale/ko";
 import {
   AlertCircle,
   Calendar,
-  Check,
   ChevronDown,
   ChevronRight,
   CornerDownRight,
   Edit3,
   GripVertical,
+  MessageCircleWarning,
   MoreVertical,
   MousePointer2,
   Notebook,
@@ -58,38 +59,11 @@ import {
   X,
 } from "lucide-react";
 import { useParams } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import styles from "./page.module.css";
 registerLocale("ko", ko);
-
-const PRESET_COLORS = [
-  "#FF6B6B",
-  "#4ECDC4",
-  "#45B7D1",
-  "#FFA07A",
-  "#98D8C8",
-  "#F7DC6F",
-  "#BB8FCE",
-  "#85C1E2",
-  "#F8B739",
-  "#52B788",
-];
-
-const CustomDateInput = React.forwardRef(
-  ({ value, onClick }: any, ref: any) => {
-    const [startDate, endDate] = value.split(" - ");
-    return (
-      <div className={styles.dateInputWrapper} onClick={onClick} ref={ref}>
-        <span>{startDate || "시작일"}</span>
-        <span className={styles.dateSeparator}>~</span>
-        <span>{endDate || "종료일"}</span>
-      </div>
-    );
-  }
-);
-CustomDateInput.displayName = "CustomDateInput";
 
 // Sortable Task 컴포넌트
 interface SortableTaskProps {
@@ -179,7 +153,7 @@ const SortableTask: React.FC<SortableTaskProps> = ({
     transition,
     opacity: isDragging ? 0 : 1,
     // 드래그 중에도 원래 높이 유지하여 레이아웃 안정성 확보
-    visibility: isDragging ? 'hidden' : 'visible',
+    visibility: isDragging ? "hidden" : "visible",
   };
 
   return (
@@ -386,7 +360,7 @@ const SortableTodo: React.FC<SortableTodoProps> = ({
     transition,
     opacity: isDragging ? 0 : 1,
     // 드래그 중에도 원래 높이 유지하여 레이아웃 안정성 확보
-    visibility: isDragging ? 'hidden' : 'visible',
+    visibility: isDragging ? "hidden" : "visible",
   };
 
   return (
@@ -510,7 +484,9 @@ const SortableTodo: React.FC<SortableTodoProps> = ({
               <span className={styles.todoDateRowLabel}>완료일:</span>
               {editingTodoDate === `${todo.id}-completed` ? (
                 <DatePicker
-                  selected={todo.completedDate ? new Date(todo.completedDate) : null}
+                  selected={
+                    todo.completedDate ? new Date(todo.completedDate) : null
+                  }
                   onChange={date => {
                     onUpdateTodoCompletedDate(taskId, todo.id, date);
                     onCancelEditingTodoDate();
@@ -527,15 +503,20 @@ const SortableTodo: React.FC<SortableTodoProps> = ({
                 <>
                   <span className={styles.todoDateRowValue}>
                     {todo.completedDate
-                      ? new Date(todo.completedDate).toLocaleDateString("ko-KR", {
-                          month: "short",
-                          day: "numeric",
-                        })
+                      ? new Date(todo.completedDate).toLocaleDateString(
+                          "ko-KR",
+                          {
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )
                       : "-"}
                   </span>
                   <button
                     className={styles.todoDateEditBtn}
-                    onClick={() => onStartEditingTodoDate(`${todo.id}-completed`)}
+                    onClick={() =>
+                      onStartEditingTodoDate(`${todo.id}-completed`)
+                    }
                     title="완료일 수정"
                   >
                     <Edit3 className="w-3 h-3" />
@@ -552,7 +533,7 @@ const SortableTodo: React.FC<SortableTodoProps> = ({
           </div>
         ) : (
           <button
-            className={`${styles.todoDateIcon} ${(todo.startDate || todo.completedDate) ? styles.hasDate : ''}`}
+            className={`${styles.todoDateIcon} ${todo.startDate || todo.completedDate ? styles.hasDate : ""}`}
             onClick={() => onToggleDateExpansion(todo.id)}
             title="날짜 정보 보기"
           >
@@ -577,12 +558,11 @@ export default function ProjectDetailPage() {
   const params = useParams();
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>("manage");
-  const [showSettings, setShowSettings] = useState(false);
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
+  const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   // 이슈 관련 상태
   const [showIssuePanel, setShowIssuePanel] = useState(false);
@@ -604,7 +584,6 @@ export default function ProjectDetailPage() {
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
   const [isAddingTodo, setIsAddingTodo] = useState<string | null>(null);
   const [newTodoName, setNewTodoName] = useState("");
-  const titleInputRef = useRef<HTMLInputElement>(null);
 
   // 편집 상태
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -629,16 +608,6 @@ export default function ProjectDetailPage() {
     isOpen: false,
     message: "",
     onConfirm: () => {},
-  });
-
-  // 폼 상태
-  const [formData, setFormData] = useState({
-    name: "",
-    category: "personal" as ProjectCategory,
-    color: "",
-    startDate: "",
-    endDate: "",
-    description: "",
   });
 
   // 드래그 앤 드롭 센서 설정
@@ -743,20 +712,6 @@ export default function ProjectDetailPage() {
 
         const currentProject = allProjects.find(p => p.id === params.id);
         setProject(currentProject || null);
-
-        // 폼 데이터 초기화
-        if (currentProject) {
-          const initialFormData = {
-            name: currentProject.name || "",
-            category: (currentProject.category ||
-              "personal") as ProjectCategory,
-            color: currentProject.color || "",
-            startDate: currentProject.startDate || "",
-            endDate: currentProject.endDate || "",
-            description: currentProject.description || "",
-          };
-          setFormData(initialFormData);
-        }
 
         // 프로젝트에 대한 작업 목록 불러오기 (Firebase에서)
         try {
@@ -879,217 +834,33 @@ export default function ProjectDetailPage() {
   }, [editingTodoId, tasks, editTodoName]);
 
   // 저장 확인 함수
-  const handleSave = () => {
-    if (!project || !params.id) return;
+  // drawer에서 프로젝트 수정 성공 시
+  const handleEditSuccess = async () => {
+    // 프로젝트 정보 새로고침
+    if (params.id) {
+      try {
+        const allProjects = await fetchProjects();
+        const currentProject = allProjects.find(p => p.id === params.id);
+        if (currentProject) {
+          setProject(currentProject);
 
-    // 변경된 내용이 있는지 확인
-    const hasChanges =
-      formData.name !== project.name ||
-      formData.category !== (project.category || "personal") ||
-      formData.color !== project.color ||
-      formData.startDate !== project.startDate ||
-      formData.endDate !== project.endDate ||
-      formData.description !== (project.description || "");
-
-    if (!hasChanges) {
-      setDialog({
-        isOpen: true,
-        title: "변경사항 없음",
-        message: "변경된 내용이 없습니다.",
-        type: "info",
-        onConfirm: () => {
-          setDialog(prev => ({ ...prev, isOpen: false }));
-          setShowSettings(false);
-        },
-      });
-      return;
-    }
-
-    // 저장 확인 팝업 표시
-    setDialog({
-      isOpen: true,
-      title: "설정 저장",
-      message: "프로젝트 설정을 저장하시겠습니까?",
-      type: "warning",
-      onConfirm: performSave,
-    });
-  };
-
-  // 제목 인풋 자동 리사이징 함수
-  const autoResizeTitleInput = () => {
-    const input = titleInputRef.current;
-    if (input) {
-      // 임시 측정용 엘리먼트 생성
-      const tempSpan = document.createElement("span");
-      tempSpan.style.font = window.getComputedStyle(input).font;
-      tempSpan.style.fontSize = "1.25rem";
-      tempSpan.style.fontWeight = "600";
-      tempSpan.style.visibility = "hidden";
-      tempSpan.style.position = "absolute";
-      tempSpan.style.whiteSpace = "nowrap";
-      tempSpan.textContent = input.value || input.placeholder;
-
-      document.body.appendChild(tempSpan);
-      const textWidth = tempSpan.offsetWidth + 32; // padding과 여유공간 추가
-      document.body.removeChild(tempSpan);
-
-      // 최소 너비 200px, 최대 너비는 부모 컨테이너의 80%
-      const minWidth = 200;
-      const maxWidth = Math.min(textWidth, window.innerWidth * 0.6);
-      input.style.width = `${Math.max(minWidth, maxWidth)}px`;
-    }
-  };
-
-  const cancelEditing = () => {
-    // 편집 모드 종료
-    setShowSettings(false);
-
-    // 폼 데이터를 원본으로 완전히 되돌림
-    if (project) {
-      setFormData({
-        name: project.name || "",
-        category: (project.category || "personal") as ProjectCategory,
-        color: project.color || "",
-        startDate: project.startDate || "",
-        endDate: project.endDate || "",
-        description: project.description || "",
-      });
-    }
-
-    console.log("편집 취소됨 - 모든 변경사항이 되돌려졌습니다.");
-  };
-
-  // 프로젝트 삭제 핸들러
-  const handleDeleteProject = () => {
-    setDialog({
-      isOpen: true,
-      title: "프로젝트 삭제",
-      message:
-        "정말로 이 프로젝트를 삭제하시겠습니까?\n프로젝트와 관련된 모든 작업과 할일이 삭제됩니다.",
-      type: "error",
-      onConfirm: performDeleteProject,
-    });
-  };
-
-  // 실제 삭제 함수
-  const performDeleteProject = async () => {
-    if (!project || !params.id) {
-      console.error("프로젝트 정보 또는 ID가 없습니다.");
-      return;
-    }
-
-    setDialog(prev => ({ ...prev, isOpen: false }));
-    setSaving(true);
-
-    try {
-      console.log("🗑️ 프로젝트 삭제 요청:", params.id);
-      const success = await deleteProject(params.id as string);
-      console.log("삭제 결과:", success);
-
-      if (success) {
-        console.log("✅ 프로젝트 삭제 성공");
-        // 삭제 성공 알림
-        setDialog({
-          isOpen: true,
-          title: "삭제 완료",
-          message: "프로젝트가 성공적으로 삭제되었습니다.",
-          type: "success",
-          onConfirm: () => {
-            // 대시보드로 이동
-            window.location.href = "/dashboard";
-          },
-        });
-      } else {
-        console.error("❌ 프로젝트 삭제 실패 (success=false)");
-        setDialog({
-          isOpen: true,
-          title: "삭제 실패",
-          message: "프로젝트 삭제에 실패했습니다. 다시 시도해주세요.",
-          type: "error",
-          onConfirm: () => {
-            setDialog(prev => ({ ...prev, isOpen: false }));
-          },
-        });
+          // 사이드바에 프로젝트 업데이트 알림
+          window.dispatchEvent(
+            new CustomEvent("projectUpdated", {
+              detail: { projectId: params.id, updates: currentProject },
+            })
+          );
+        }
+      } catch (error) {
+        console.error("프로젝트 정보 새로고침 실패:", error);
       }
-    } catch (error) {
-      console.error("❌ 프로젝트 삭제 중 예외 발생:", error);
-      setDialog({
-        isOpen: true,
-        title: "오류 발생",
-        message: `프로젝트 삭제 중 오류가 발생했습니다.\n${error instanceof Error ? error.message : String(error)}`,
-        type: "error",
-        onConfirm: () => {
-          setDialog(prev => ({ ...prev, isOpen: false }));
-        },
-      });
-    } finally {
-      setSaving(false);
     }
   };
 
-  // 실제 저장 함수
-  const performSave = async () => {
-    if (!project || !params.id) return;
-
-    setDialog(prev => ({ ...prev, isOpen: false }));
-    setSaving(true);
-
-    try {
-      const success = await updateProject(params.id as string, formData);
-
-      if (success) {
-        // 프로젝트 상태 즉시 업데이트
-        const updatedProject = { ...project, ...formData };
-        setProject(updatedProject);
-
-        // 사이드바에 프로젝트 업데이트 알림
-        window.dispatchEvent(
-          new CustomEvent("projectUpdated", {
-            detail: { projectId: params.id, updates: formData },
-          })
-        );
-
-        setShowSettings(false);
-
-        // 성공 팝업 표시
-        setDialog({
-          isOpen: true,
-          title: "저장 완료",
-          message: "프로젝트 설정이 성공적으로 저장되었습니다.",
-          type: "success",
-          onConfirm: () => {
-            setDialog(prev => ({ ...prev, isOpen: false }));
-          },
-        });
-      } else {
-        // 실패 팝업 표시
-        setDialog({
-          isOpen: true,
-          title: "저장 실패",
-          message: "프로젝트 업데이트에 실패했습니다. 다시 시도해주세요.",
-          type: "error",
-          onConfirm: () => {
-            setDialog(prev => ({ ...prev, isOpen: false }));
-          },
-        });
-      }
-    } catch (error) {
-      console.error("프로젝트 저장 실패:", error);
-
-      // 오류 팝업 표시
-      setDialog({
-        isOpen: true,
-        title: "오류 발생",
-        message:
-          "프로젝트 저장 중 오류가 발생했습니다. 네트워크 연결을 확인해주세요.",
-        type: "error",
-        onConfirm: () => {
-          setDialog(prev => ({ ...prev, isOpen: false }));
-        },
-      });
-    } finally {
-      setSaving(false);
-    }
+  // drawer에서 프로젝트 삭제 성공 시
+  const handleDeleteSuccess = () => {
+    // 대시보드로 이동
+    window.location.href = "/dashboard";
   };
 
   // Firebase에서 최신 작업 목록 다시 로드
@@ -1801,33 +1572,17 @@ export default function ProjectDetailPage() {
               <DonutChart
                 progress={currentProjectProgress}
                 size="sm"
-                color={showSettings ? formData.color : project.color}
+                color={project.color}
               />
               <div className={styles.progressInfo}>
                 <div className={styles.titleSection}>
                   <div
                     className={styles.projectColorBox}
                     style={{
-                      backgroundColor: showSettings
-                        ? formData.color
-                        : project.color,
+                      backgroundColor: project.color,
                     }}
                   />
-                  {showSettings ? (
-                    <input
-                      ref={titleInputRef}
-                      type="text"
-                      value={formData.name}
-                      onChange={e => {
-                        setFormData({ ...formData, name: e.target.value });
-                        setTimeout(autoResizeTitleInput, 0);
-                      }}
-                      className={styles.titleInput}
-                      autoFocus
-                    />
-                  ) : (
-                    <h3 className={styles.progressTitle}>{project.name}</h3>
-                  )}
+                  <h3 className={styles.progressTitle}>{project.name}</h3>
                 </div>
 
                 <div className={styles.projectStatusInfo}>
@@ -1840,202 +1595,59 @@ export default function ProjectDetailPage() {
                     </span>
                   </div>
                   <div className={styles.headerDates}>
-                    {showSettings ? (
-                      <DatePicker
-                        selectsRange={true}
-                        startDate={
-                          formData.startDate
-                            ? new Date(formData.startDate)
-                            : null
-                        }
-                        endDate={
-                          formData.endDate ? new Date(formData.endDate) : null
-                        }
-                        onChange={update => {
-                          const [start, end] = update;
-                          setFormData({
-                            ...formData,
-                            startDate: start
-                              ? new Date(
-                                  start.getTime() -
-                                    start.getTimezoneOffset() * 60000
-                                )
-                                  .toISOString()
-                                  .split("T")[0]
-                              : "",
-                            endDate: end
-                              ? new Date(
-                                  end.getTime() -
-                                    end.getTimezoneOffset() * 60000
-                                )
-                                  .toISOString()
-                                  .split("T")[0]
-                              : "",
-                          });
-                        }}
-                        customInput={
-                          <CustomDateInput
-                            value={
-                              formData.startDate
-                                ? `${formData.startDate} - ${formData.endDate || ""}`
-                                : ""
-                            }
-                          />
-                        }
-                        dateFormat="yyyy-MM-dd"
-                        popperPlacement="bottom-start"
-                        locale="ko"
-                      />
-                    ) : (
-                      <p>{`${project.startDate} ~ ${project.endDate}`}</p>
-                    )}
+                    <p>{`${project.startDate} ~ ${project.endDate || '무기한'}`}</p>
                   </div>
                 </div>
               </div>
 
               {/* 액션 버튼들 */}
               <div className={styles.headerActions}>
-                {showSettings ? (
-                  <>
-                    <button
-                      onClick={cancelEditing}
-                      className={styles.cancelButton}
-                    >
-                      <X className="w-4 h-4" />
-                      취소
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      className={styles.completeButton}
-                    >
-                      <Check className="w-4 h-4" />
-                      완료
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setShowIssuePanel(!showIssuePanel)}
-                      className={`${styles.issueButton} ${
-                        showIssuePanel ? styles.issueButtonActive : ""
-                      }`}
-                    >
-                      <AlertCircle className="w-4 h-4" />
-                      이슈{" "}
-                      <span className={styles.issueCount}>{issues.length}</span>
-                    </button>
+                <button
+                  onClick={() => setShowIssuePanel(!showIssuePanel)}
+                  className={`${styles.issueButton} ${
+                    showIssuePanel ? styles.issueButtonActive : ""
+                  }`}
+                >
+                  <AlertCircle className="w-4 h-4" />
+                  이슈{" "}
+                  <span className={styles.issueCount}>{issues.length}</span>
+                </button>
 
-                    <button
-                      onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
-                      className={`${styles.moreButton} ${
-                        isHeaderExpanded ? styles.moreButtonActive : ""
-                      }`}
-                    >
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
-                  </>
-                )}
+                <button
+                  onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+                  className={`${styles.moreButton} ${
+                    isHeaderExpanded ? styles.moreButtonActive : ""
+                  }`}
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
             {/* 확장된 설명 영역 - progressSection 외부 */}
             <div
               className={`${styles.expandedHeaderContent} ${
-                !(isHeaderExpanded || showSettings) ? styles.collapsed : ""
+                !isHeaderExpanded ? styles.collapsed : ""
               }`}
             >
-              {showSettings ? (
-                <div className={styles.projectDetailBox}>
-                  <label className={styles.label}>프로젝트 설명</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={e =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    className={styles.descriptionTextarea}
-                    rows={3}
-                  />
-                  <div className={styles.advancedSettings}>
-                    <div className={styles.categorySettings}>
-                      <label className={styles.label}>카테고리</label>
-                      <div className={styles.categoryButtons}>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData({ ...formData, category: "personal" })
-                          }
-                          className={`${styles.categoryButton} ${
-                            formData.category === "personal"
-                              ? styles.categoryButtonSelected
-                              : styles.categoryButtonDefault
-                          }`}
-                        >
-                          개인
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData({ ...formData, category: "work" })
-                          }
-                          className={`${styles.categoryButton} ${
-                            formData.category === "work"
-                              ? styles.categoryButtonSelected
-                              : styles.categoryButtonDefault
-                          }`}
-                        >
-                          업무
-                        </button>
-                      </div>
-                    </div>
-                    <div className={styles.colorSettings}>
-                      <label className={styles.label}>프로젝트 색상</label>
-                      <div className={styles.colorPalette}>
-                        {PRESET_COLORS.map(color => (
-                          <button
-                            key={color}
-                            type="button"
-                            onClick={() => setFormData({ ...formData, color })}
-                            className={`${styles.colorButton} ${
-                              formData.color === color
-                                ? styles.colorButtonSelected
-                                : ""
-                            }`}
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+              <div className={styles.projectDetailBox}>
+                <p className={styles.descriptionArea}>
+                  {project.description || "설명이 없습니다."}
+                </p>
+              </div>
+              {isHeaderExpanded && (
+                <div className={styles.descriptionActions}>
+                  <button
+                    onClick={() => {
+                      setIsEditDrawerOpen(true);
+                      setIsHeaderExpanded(false);
+                    }}
+                    className={styles.editDescriptionButton}
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    수정
+                  </button>
                 </div>
-              ) : (
-                <>
-                  <div className={styles.projectDetailBox}>
-                    <p className={styles.descriptionArea}>
-                      {project.description || "설명이 없습니다."}
-                    </p>
-                  </div>
-                  {isHeaderExpanded && (
-                    <div className={styles.descriptionActions}>
-                      <button
-                        onClick={() => {
-                          setShowSettings(true);
-                          setIsHeaderExpanded(true);
-                        }}
-                        className={styles.editDescriptionButton}
-                      >
-                        <Edit3 className="w-4 h-4" />
-                        수정
-                      </button>
-                      <button
-                        onClick={handleDeleteProject}
-                        className={styles.deleteButton}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        삭제
-                      </button>
-                    </div>
-                  )}
-                </>
               )}
             </div>
 
@@ -2097,14 +1709,19 @@ export default function ProjectDetailPage() {
                 )}
 
                 {tasks.length === 0 && !isAddingTask ? (
-                  <div className={styles.emptyTaskState}>
+                  <button
+                    onClick={handleAddNewTask}
+                    className={styles.emptyTaskState}
+                  >
                     <p className={styles.emptyStateTitle}>
-                      등록된 작업이 없습니다
+                      작업을 추가하여 기록을 시작해보세요
+                      <MessageCircleWarning className="w-4 h-4" />
                     </p>
                     <p className={styles.emptyStateText}>
-                      새로운 작업을 추가해보세요
+                      <Plus className="w-4 h-4" />
+                      새로운 작업 추가하기
                     </p>
-                  </div>
+                  </button>
                 ) : (
                   (tasks.length > 0 || isAddingTask) && (
                     <DndContext
@@ -2185,7 +1802,9 @@ export default function ProjectDetailPage() {
                                           onCancelEditingTodoDate={
                                             cancelEditingTodoDate
                                           }
-                                          onToggleDateExpansion={setExpandedTodoDate}
+                                          onToggleDateExpansion={
+                                            setExpandedTodoDate
+                                          }
                                           onUpdateTodoStartDate={
                                             updateTodoStartDate
                                           }
@@ -2200,8 +1819,14 @@ export default function ProjectDetailPage() {
                                     <DragOverlay>
                                       {activeTodoId ? (
                                         <div className={styles.dragOverlayTodo}>
-                                          <span className={styles.todoCardTitle}>
-                                            {task.todos.find(t => t.id === activeTodoId)?.title}
+                                          <span
+                                            className={styles.todoCardTitle}
+                                          >
+                                            {
+                                              task.todos.find(
+                                                t => t.id === activeTodoId
+                                              )?.title
+                                            }
                                           </span>
                                         </div>
                                       ) : null}
@@ -2283,7 +1908,10 @@ export default function ProjectDetailPage() {
                                 <div className={styles.taskHeaderTop}>
                                   <div className={styles.taskTitleSection}>
                                     <h4 className={styles.taskTitle}>
-                                      {tasks.find(t => t.id === activeTaskId)?.title}
+                                      {
+                                        tasks.find(t => t.id === activeTaskId)
+                                          ?.title
+                                      }
                                     </h4>
                                   </div>
                                 </div>
@@ -2302,14 +1930,19 @@ export default function ProjectDetailPage() {
             {viewMode === "summary" && (
               <div className={styles.summaryMode}>
                 {tasks.length === 0 ? (
-                  <div className={styles.emptyTaskState}>
+                  <button
+                    onClick={handleAddNewTask}
+                    className={styles.emptyTaskState}
+                  >
                     <p className={styles.emptyStateTitle}>
-                      등록된 작업이 없습니다
+                      작업을 추가하여 기록을 시작해보세요
+                      <MessageCircleWarning className="w-4 h-4" />
                     </p>
                     <p className={styles.emptyStateText}>
-                      새로운 작업을 추가해보세요
+                      <Plus className="w-4 h-4" />
+                      새로운 작업 추가하기
                     </p>
-                  </div>
+                  </button>
                 ) : (
                   <div className={styles.summaryTasksList}>
                     {tasks.map(task => (
@@ -2388,19 +2021,6 @@ export default function ProjectDetailPage() {
             onConfirm={dialog.onConfirm}
             onCancel={() => setDialog(prev => ({ ...prev, isOpen: false }))}
           />
-
-          {/* 삭제 중 로딩 오버레이 */}
-          {saving && (
-            <div className={styles.loadingOverlay}>
-              <div className={styles.loadingSpinner}>
-                <div className={styles.spinner}></div>
-                <p>프로젝트 삭제 중...</p>
-                <p className={styles.loadingSubtext}>
-                  관련된 모든 데이터를 삭제하고 있습니다.
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* 이슈 패널 */}
           <div
@@ -2577,6 +2197,15 @@ export default function ProjectDetailPage() {
           요약모드
         </button>
       </div>
+
+      {/* 프로젝트 수정 Drawer */}
+      <EditProjectDrawer
+        isOpen={isEditDrawerOpen}
+        onClose={() => setIsEditDrawerOpen(false)}
+        project={project}
+        onSuccess={handleEditSuccess}
+        onDelete={handleDeleteSuccess}
+      />
     </div>
   );
 }

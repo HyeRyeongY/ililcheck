@@ -4,7 +4,12 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { createProject } from '@/lib/api';
 import type { Project, ProjectCategory } from '@/lib/types';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import { ko } from 'date-fns/locale/ko';
+import 'react-datepicker/dist/react-datepicker.css';
 import styles from './CreateProjectModal.module.css';
+
+registerLocale('ko', ko);
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -65,15 +70,15 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, default
       return;
     }
 
-    if (!formData.startDate || !formData.endDate) {
-      setError('시작일과 종료일을 선택해주세요.');
+    if (!formData.startDate) {
+      setError('시작일을 선택해주세요.');
       return;
     }
 
     const startDate = new Date(formData.startDate);
-    const endDate = new Date(formData.endDate);
+    const endDate = formData.endDate ? new Date(formData.endDate) : null;
 
-    if (endDate < startDate) {
+    if (endDate && endDate < startDate) {
       setError('종료일은 시작일 이후여야 합니다.');
       return;
     }
@@ -82,16 +87,18 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, default
 
     try {
       const today = new Date();
-      const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const daysRemaining = endDate
+        ? Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+        : null;
 
       const projectData: Omit<Project, 'id'> = {
         name: formData.name.trim(),
         description: formData.description.trim(),
         color: formData.color,
         startDate: formData.startDate,
-        endDate: formData.endDate,
+        endDate: formData.endDate || null,
         progress: 0,
-        daysRemaining: Math.max(0, daysRemaining),
+        daysRemaining: daysRemaining !== null ? Math.max(0, daysRemaining) : null,
         category: formData.category
       };
 
@@ -171,29 +178,46 @@ export default function CreateProjectModal({ isOpen, onClose, onSuccess, default
 
           <div className={styles.dateFields}>
             <div className={styles.field}>
-              <label htmlFor="startDate" className={styles.label}>
+              <label className={styles.label}>
                 시작일 *
               </label>
-              <input
-                id="startDate"
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+              <DatePicker
+                selected={formData.startDate ? new Date(formData.startDate) : null}
+                onChange={(date) => {
+                  const dateString = date
+                    ? new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+                        .toISOString()
+                        .split('T')[0]
+                    : '';
+                  setFormData({ ...formData, startDate: dateString });
+                }}
+                placeholderText="시작일 선택"
+                dateFormat="yyyy-MM-dd"
                 className={styles.input}
+                locale="ko"
                 disabled={loading}
               />
             </div>
 
             <div className={styles.field}>
-              <label htmlFor="endDate" className={styles.label}>
-                종료일 *
+              <label className={styles.label}>
+                종료일
               </label>
-              <input
-                id="endDate"
-                type="date"
-                value={formData.endDate}
-                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+              <DatePicker
+                selected={formData.endDate ? new Date(formData.endDate) : null}
+                onChange={(date) => {
+                  const dateString = date
+                    ? new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+                        .toISOString()
+                        .split('T')[0]
+                    : '';
+                  setFormData({ ...formData, endDate: dateString });
+                }}
+                placeholderText="무기한"
+                dateFormat="yyyy-MM-dd"
                 className={styles.input}
+                locale="ko"
+                isClearable
                 disabled={loading}
               />
             </div>

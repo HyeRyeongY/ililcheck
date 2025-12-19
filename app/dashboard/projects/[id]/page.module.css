@@ -409,9 +409,38 @@
 .cancelTaskBtn { background-color: white; color: #6b7280; border: 1px solid #d1d5db; }
 .saveTaskBtn { background-color: #3b82f6; color: white; border: 1px solid #3b82f6; }
 .saveTaskBtn:disabled { background-color: #9ca3af; border-color: #9ca3af; cursor: not-allowed; }
-.emptyTaskState { text-align: center; padding: 3rem 2rem; border: 2px dashed #e5e7eb; border-radius: 0.5rem; }
-.emptyStateTitle { font-size: 1.125rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; }
-.emptyStateText { color: #6b7280; }
+.emptyTaskState {
+  width: 100%;
+  text-align: center;
+  padding: 1rem;
+  border: 2px dashed #e5e7eb;
+  border-radius: 0.5rem;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.emptyTaskState:hover {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+.emptyStateTitle {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #374151;
+  margin-bottom: 0.25rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+.emptyStateText {
+  color: #3b82f6;
+  font-size: 0.875rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
 .tasksSection {
   display: flex;
   flex-direction: column;
@@ -654,11 +683,11 @@
   flex: 1;
 }
 
-.todoCardTitleWrapper:hover .todoCardTitle {
+.todoCardTitle:hover {
   color: #3b82f6;
 }
 
-.todoCardTitleWrapper:hover .editIcon {
+.todoCardTitleWrapper:has(.todoCardTitle:hover) .editIcon {
   opacity: 1;
 }
 
@@ -913,7 +942,8 @@
 .todoTitleWrapper:hover .editIcon { opacity: 1; }
 .todoTitle { font-size: 0.875rem; color: #374151; transition: color 0.2s; border-bottom: 1px solid transparent; word-break: break-word; line-height: 1.4; }
 .todoTitle.completed { text-decoration: line-through; color: #9ca3af; }
-.editTodoInput { font-size: 0.875rem; color: #374151; caret-color:#3b82f6; border: none; outline: none; background: transparent;  padding: 0; margin: 0; min-width: 150px; }
+.editTodoInput { font-size: 0.875rem; color: #374151; caret-color:#3b82f6; border: none; outline: none; background: transparent;  padding: 0; margin: 0; min-width: 150px; 
+  flex: 1;}
 .editIcon { width: 0.75rem; height: 0.75rem; color: #9ca3af; opacity: 0; transition: opacity 0.2s; flex-shrink: 0; margin-top: 0.35rem; }
 .todoControls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; margin-left: 0.75rem; padding-left:1.25rem; border-left: 0.125rem solid #e5e7eb; }
 .todoProgress { flex-shrink: 0; height: 20px; display: flex; align-items: center; }

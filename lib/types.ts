@@ -4,9 +4,9 @@ export interface Project {
   color: string;
   description?: string;
   startDate: string;
-  endDate: string;
+  endDate: string | null;
   progress: number;
-  daysRemaining: number;
+  daysRemaining: number | null;
   category: 'personal' | 'work'; // 개인/업무 구분
   completedTasks?: number;
   totalTasks?: number;

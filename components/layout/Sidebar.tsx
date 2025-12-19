@@ -256,10 +256,12 @@ export default function Sidebar() {
                     </div>
                     <div className={styles.projectPeriod}>
                       <p className={styles.projectDates}>
-                        {project.startDate} ~ {project.endDate}
+                        {project.startDate} ~ {project.endDate || '무기한'}
                       </p>
                       <p className={styles.projectDaysRemaining}>
-                        D{project.daysRemaining}
+                        {project.daysRemaining !== null && project.daysRemaining !== undefined
+                          ? `D${project.daysRemaining}`
+                          : ''}
                       </p>
                     </div>
                   </div>
